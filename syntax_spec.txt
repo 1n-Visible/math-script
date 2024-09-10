@@ -1,0 +1,50 @@
+
+        = NeonScript Syntax Specification =
+
+Atoms:
+    varname ::= [\d][\d\w]*
+    integer ::= [\d]+
+    floating ::= [\d]+\.[\d]+ ([Ee][+-]<integer>)?
+    character ::= $'?'
+    string ::= '"' * '"'
+    fstring ::= '$"' * ${<expr>} \${just string} * '"'
+
+Operations (in precedence order):
+    Dot access:             <expr>.<varname>
+    Array index:            <varname>[<expr>]
+    Array length:           #<varname>
+    Sqare, cube:            <expr>², <expr>³
+    Factorial:              <expr>!
+    Power:                  <expr>**<expr>
+    Sqare root:             √<atom> √(<expr>)
+    
+    Hidden multiplication:  <number> <atom>
+    Multiplication, division, matrix multiplication,
+    whole division, modulo: <expr> * <expr>, <expr> / <expr>, <array> @ <array>,
+                            <expr> // <expr>, <expr> % <expr>
+    Unary plus, minus, plus-minus: [+-±] <expr>
+    Binary plus, minus, plus-minus: <expr> [+-±] <expr>
+    
+    Range NOT:              !<range>
+    Set conjunction (AND):  <expr> & <expr>
+    Set exclusive disjunction (XOR): <expr> ^ <expr>
+    Set disjunction (OR):   <expr> | <expr>
+    
+    Comparisons:            <expr> [("==" | "!=" | "~" | "!~" | "~=" | "!~=" |
+                            "<" | ">" | "<=" | ">=" |
+                            "is" | "∈" | "∉" | "⊂" | "⊃") <expr>]+
+    Logical NOT:            not <expr>
+    Logical AND:            <expr> and <expr>
+    Logical OR:             <expr> or <expr>
+
+Enclosures:
+    Parenthesis:            ( <expr> )
+    Square brackets:        [ <expr> ]
+    Set:                    { <expr>, ... }
+    Absolute value:         || <expr> ||
+    Range:                  ["(["] <expr> ; <expr> [")]"]
+    Vector:                 ( <expr>, ... )
+    Integral:               ∫ <range> <expr> ∂x
+    Simple Function definition: <varname>(<varname>, ...) = <expr>
+    Function call:          <varname>(<expr>, ...)
+    Function Derivative call: <varname>'(<expr>, ...)
