@@ -39,51 +39,69 @@ EQ, NE, AEQ, NAE, REQ, NRE, LT, GT, LE, GE
 KW_NOT, KW_AND, KW_OR # Ternary??
 */
 
+static const OperType OperType_muldiv[] = {
+    [MUL]=BINOP_MUL, [TRUEDIV]=BINOP_TRUEDIV, [MATMUL_AT]=BINOP_MATMUL,
+    [DIV]=BINOP_DIV, [MOD]=BINOP_MOD
+};
+
+static const OperType OperType_addsub[] = {
+    [PLUS]=BINOP_ADD, [MINUS]=BINOP_SUB, [PM]=BINOP_PM
+};
+
 #define FREE_BUFF() free(which_buffer? new_buffer: buffer)
-#define parse_binop(LABEL, MATCH) { \
-    Expression *expr, *left; \
-    for (i=0, new_buffsize=0; i<buffsize; i++) { \
-        node=buffer[i]; \
-        if (node.type!=NT_EXPR) goto LABEL; \
-        \
-        left=node.expr; \
-        for (i++; i<buffsize-1; i+=2) { \
-            node=buffer[i]; \
-            if (node.type!=NT_WORD) {i--; break;} \
-            \
-            TokenType type=node.tt; \
-            switch (type) { \
-                MATCH \
-                node=buffer[i+1]; \
-                if (node.type!=NT_EXPR) { \
-                    node=ASTNode_error(node, L"Expected expression, got ..."); \
-                    goto LABEL; \
-                } \
-                expr=new_Expression(NT_BINOP); \
-                expr->left=left; \
-                expr->oper=type; \
-                expr->right=node.expr; \
-                left=expr; \
-                continue; \
-            } \
-            i--; break; \
-        } \
-        node=(ASTNode){NT_EXPR, .expr=left}; \
-        LABEL: \
-        new_buffer[new_buffsize++]=node; \
-        if (node.type==NT_ERROR) break; \
-    } \
-    node=new_buffer[new_buffsize-1]; \
-    if (new_buffsize==1) { \
-        FREE_BUFF(); return node; \
-    } else if (node.type==NT_ERROR) { \
-        new_buffsize--; i=0; \
-        FREE_BUFF(); return node; \
-    } else { \
-        node=new_buffer[0]; i=1; \
-    } \
-    SWAP_PTR(buffer, new_buffer); \
-    which_buffer=!which_buffer; \
+static void parse_binop(ASTNode *buffer, ASTNode *new_buffer,
+                        const OperType *lut, bool *which_buffer) {
+    ASTNode node;
+    Expression *expr, *left;
+
+    for (i=0, new_buffsize=0; i<buffsize; i++) {
+        node=buffer[i];
+        if (node.type!=NT_EXPR)
+            goto push;
+
+        left=node.expr;
+        for (i++; i<buffsize-1; i+=2) {
+            node=buffer[i];
+            if (node.type!=NT_TOKEN) {i--; break;}
+
+            OperType type = lut[node.tt];
+            if (!type) {i--; break;}
+
+            node=buffer[i+1];
+            if (node.type!=NT_EXPR) {
+                node=ASTNode_error(node, L"Expected expression, got ...");
+                goto push;
+            }
+
+            expr=new_Expression(NT_BINOP);
+            expr->left=left;
+            expr->oper=type;
+            expr->right=node.expr;
+            left=expr;
+
+        }
+
+        node=(ASTNode){NT_EXPR, .expr=left};
+
+        push:
+        new_buffer[new_buffsize++]=node;
+        if (node.type==NT_ERROR) break;
+    }
+
+    node=new_buffer[new_buffsize-1];
+    if (new_buffsize==1) {
+        free(*which_buffer? new_buffer: buffer);
+        return node;
+    } else if (node.type==NT_ERROR) {
+        new_buffsize--; i=0;
+        free(*which_buffer? new_buffer: buffer);
+        return node;
+    } else {
+        node=new_buffer[0]; i=1;
+    }
+
+    SWAP_PTR(buffer, new_buffer);
+    *which_buffer = not *which_buffer;
 }
 
 static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
@@ -91,26 +109,23 @@ static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
     ASTNode node, *new_buffer=calloc(buffsize, sizeof(ASTNode));
     bool which_buffer=true;
 
-    parse_binop(
-        push_mul, case MUL: case TRUEDIV:
-        case DIV: case MOD: case MATMUL_AT:);
-    parse_binop(push_add, case PLUS: case MINUS: case PM:);
+    parse_binop(buffer, new_buffer, OperType_muldiv, &which_buffer);
+    parse_binop(buffer, new_buffer, OperType_addsub, &which_buffer);
     
     FREE_BUFF();
     return node;
 }
 
 #undef FREE_BUFF
-#undef parse_binop
 
-static ASTNode *scan_until(Parser *parser, TokenType termin, size_t *return_size,
-                           short *index, ushort *rangetype);
+static ASTNode *scan_inbrackets(Parser *parser, TokenType termin, size_t *return_size,
+                                short *index, ushort *rangetype);
 
 static ASTNode parse_parenth(Parser *parser) {
     short index;
     ushort rangetype;
     size_t i, buffsize;
-    ASTNode node, *buffer=scan_until(
+    ASTNode node, *buffer=scan_inbrackets(
         parser, PAREN_R, &buffsize, &index, &rangetype
     );
 
@@ -156,7 +171,7 @@ static ASTNode parse_braces(Parser *parser) {
 }
 
 //TODO: rename
-static ASTNode *scan_until(Parser *parser, TokenType termin,
+static ASTNode *scan_inbrackets(Parser *parser, TokenType termin,
                            size_t *return_size, short *index, ushort *rangetype) {
     size_t i=0, buffsize=16;
     ASTNode node, *buffer=calloc(buffsize, sizeof(ASTNode));

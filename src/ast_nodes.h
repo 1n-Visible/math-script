@@ -34,7 +34,7 @@ Atom Atom_from_Token(Token token);
 extern const ushort RANGE_START, RANGE_STOP;
 
 typedef enum OperType {
-    UNARY_LENGTH, UNARY_ABS, UNARY_SQR, UNARY_CUBE, UNARY_FACTORIAL,
+    UNARY_LENGTH=1, UNARY_ABS, UNARY_SQR, UNARY_CUBE, UNARY_FACTORIAL,
     BINOP_POW, UNARY_SQRT,
     BINOP_MUL, BINOP_TRUEDIV, BINOP_MATMUL, BINOP_DIV, BINOP_MOD,
     UNARY_POS, UNARY_NEG, UNARY_PM,
@@ -45,6 +45,8 @@ typedef enum OperType {
     COMP_IS, COMP_IN, COMP_NOT_IN, COMP_SUBSET, COMP_SUPERSET
 } OperType;
 
+extern const char *OperType_string[];
+
 /* === EXPRESSIONS === */
 enum ExpressionType {
     NT_ATOM, NT_UNARY_PREFIX, NT_UNARY_POSTFIX,
@@ -54,11 +56,11 @@ enum ExpressionType {
 
 typedef struct Expression {
     enum ExpressionType type;
-    TokenType oper;      // unary/binary operator type
+    OperType oper;      // unary/binary operator type
     ushort parameter;    // chain length | range type
     Atom atom;
 
-    TokenType *operators;// ==, !=, <=, >= ...chains
+    OperType *operators;// ==, !=, <=, >= ...chains
     struct Expression *value, *left, *right, **values;
 } Expression;
 
@@ -90,7 +92,7 @@ void print_command(Command *command);
 /* === AST NODE === */
 typedef enum {
     NT_EOF=0, NT_ERROR, NT_EMPTY,
-    NT_WORD, NT_INDENT, NT_EXPR, NT_COMMAND
+    NT_TOKEN, NT_INDENT, NT_EXPR, NT_COMMAND
 } ASTNodeType;
 
 struct ASTNode {

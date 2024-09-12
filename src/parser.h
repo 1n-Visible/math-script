@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <wchar.h>
 #include <math.h>
+#include <iso646.h>
 
 #include "lexer.h"
 #include "ast_nodes.h"

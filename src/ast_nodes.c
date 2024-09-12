@@ -75,7 +75,19 @@ Atom Atom_from_Token(Token token) { // frees Token
 }
 
 
-const ushort RANGE_START=0, RANGE_STOP=0;
+const ushort RANGE_START=1, RANGE_STOP=2;
+
+const char *OperType_string[] = {
+    NULL, "UNARY_LENGTH", "UNARY_ABS", "UNARY_SQR", "UNARY_CUBE", "UNARY_FACTORIAL",
+    "BINOP_POW", "UNARY_SQRT",
+    "BINOP_MUL", "BINOP_TRUEDIV", "BINOP_MATMUL", "BINOP_DIV", "BINOP_MOD",
+    "UNARY_POS", "UNARY_NEG", "UNARY_PM",
+    "BINOP_ADD", "BINOP_SUB", "BINOP_PM",
+    "BINOP_AND", "BINOP_XOR", "BINOP_OR",
+    "COMP_EQ", "COMP_NE", "COMP_AEQ", "COMP_NAE", "COMP_REQ", "COMP_NRE",
+    "COMP_LT", "COMP_GT", "COMP_LE", "COMP_GE",
+    "COMP_IS", "COMP_IN", "COMP_NOT_IN", "COMP_SUBSET", "COMP_SUPERSET"
+};
 
 Expression *new_Expression(enum ExpressionType type) {
     Expression *expr=malloc(sizeof(Expression));
@@ -124,19 +136,19 @@ void print_expr_long(Expression *expr) {
             break;
         case NT_UNARY_PREFIX:
         case NT_UNARY_POSTFIX:
-            wprintf(L"oper=%s, value=", TokenType_string[expr->oper]);
+            wprintf(L"oper=%s, value=", OperType_string[expr->oper]);
             print_expr_long(expr->value);
             break;
         case NT_BINOP:
             wprintf(L"left=");
             print_expr_long(expr->left);
-            wprintf(L", oper=%s, right=", TokenType_string[expr->oper]);
+            wprintf(L", oper=%s, right=", OperType_string[expr->oper]);
             print_expr_long(expr->right);
             break;
         case NT_COMP:
             for (ushort i=0; i<param; i++) {
                 print_expr_long(expr->values[i]);
-                wprintf(L", %s, ", TokenType_string[expr->operators[i]]);
+                wprintf(L", %s, ", OperType_string[expr->operators[i]]);
             }
             print_expr_long(expr->values[param]);
             break;
@@ -159,20 +171,20 @@ void print_expr(Expression *expr) {
             return;
         case NT_UNARY_PREFIX:
         case NT_UNARY_POSTFIX:
-            wprintf(L"(%s ", TokenType_string[expr->oper]);
+            wprintf(L"(%s ", OperType_string[expr->oper]);
             print_expr(expr->value);
             break;
         case NT_BINOP:
             wprintf(L"(");
             print_expr(expr->left);
-            wprintf(L" %s ", TokenType_string[expr->oper]);
+            wprintf(L" %s ", OperType_string[expr->oper]);
             print_expr(expr->right);
             break;
         case NT_COMP:
             putwchar(L'(');
             for (ushort i=0; i<param; i++) {
                 print_expr(expr->values[i]);
-                wprintf(L" %s ", TokenType_string[expr->operators[i]]);
+                wprintf(L" %s ", OperType_string[expr->operators[i]]);
             }
             print_expr(expr->values[param]);
             break;
@@ -227,8 +239,8 @@ void print_ASTNode(ASTNode node) {
             wprintf(L"Syntax Error: %ls", node.error_code); break;
         case NT_EMPTY:
             wprintf(L"EMPTY"); break;
-        case NT_WORD:
-            wprintf(L"%s", TokenType_string[node.tt]); break;
+        case NT_TOKEN:
+            wprintf(L"%s", OperType_string[node.tt]); break;
         case NT_INDENT:
             wprintf(L"INDENT: %hu", node.indent); break;
         case NT_EXPR:
@@ -270,7 +282,7 @@ ASTNode ASTNode_from_Token(Token token) { // frees Token
 
     Atom atom=Atom_from_Token(token);
     if (atom.type==AT_EMPTY) {
-        node.type=NT_WORD;
+        node.type=NT_TOKEN;
         node.tt=token.type;
         return node;
     }
