@@ -48,9 +48,11 @@ static const OperType OperType_addsub[] = {
     [PLUS]=BINOP_ADD, [MINUS]=BINOP_SUB, [PM]=BINOP_PM
 };
 
+static const ushort lut_muldiv_len=MOD+1, lut_addsub_len=PM+1; // TODO: rename
+
 // Iterate over buffer and write parsed version into new_buffer
 static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
-                          const OperType *oper_lut) {
+                          const OperType *oper_lut, ushort lut_len) {
     ASTNode node;
     Expression *expr, *left;
 
@@ -63,7 +65,7 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
         left=node.expr; // Construct chain of operators
         for (i++; i<buffsize-1; i+=2) {
             node=buffer[i];
-            OperType optype = oper_lut[node.tt];
+            OperType optype = (node.tt<lut_len)? oper_lut[node.tt]: 0;
             if (node.type!=NT_TOKEN or !optype) {
                 i--; break;
             }
@@ -92,8 +94,8 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
 }
 
 // TODO: free Expression
-#define PARSE_BINOP(oper_lut) { \
-    new_buffsize=parse_binop(buffer, new_buffer, buffsize, oper_lut); \
+#define PARSE_BINOP(oper_lut, lut_len) { \
+    new_buffsize=parse_binop(buffer, new_buffer, buffsize, oper_lut, lut_len); \
     SWAP_PTR(buffer, new_buffer); \
     size_t tmp=buffsize; buffsize=new_buffsize; new_buffsize=tmp; \
     which_buffer = not which_buffer; \
@@ -106,8 +108,7 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
         buffsize--; \
         free(which_buffer? new_buffer: buffer); \
         return node; \
-    } else \
-        node=buffer[0]; \
+    } else node=buffer[0]; \
 }
 
 static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
@@ -115,8 +116,8 @@ static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
     ASTNode node, *new_buffer=calloc(buffsize, sizeof(ASTNode));
     bool which_buffer=true;
 
-    PARSE_BINOP(OperType_muldiv);
-    PARSE_BINOP(OperType_addsub);
+    PARSE_BINOP(OperType_muldiv, lut_muldiv_len);
+    PARSE_BINOP(OperType_addsub, lut_addsub_len);
 
     free(which_buffer? new_buffer: buffer);
     return node;
@@ -130,8 +131,7 @@ static ASTNode *scan_inbrackets(
 );
 
 static ASTNode parse_parenth(Parser *parser) {
-    short index;
-    ushort rangetype;
+    short index; ushort rangetype;
     size_t i, buffsize;
     ASTNode node, *buffer=scan_inbrackets(
         parser, PAREN_R, &buffsize, &index, &rangetype

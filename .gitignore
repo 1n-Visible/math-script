@@ -29,6 +29,7 @@
 *.dylib
 
 # Executables
+math-script
 *.exe
 *.out
 *.app
