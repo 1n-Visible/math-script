@@ -30,7 +30,7 @@ int exec_shell(FILE *file) {
     Parser *parser=new_Parser(file);
     ASTNode node;
     while (true) {
-        wprintf(L"\n\nns> ");
+        wprintf(L"\n\nms> ");
         node=parse_line(parser);
         if (node.type==NT_EOF)
             break;

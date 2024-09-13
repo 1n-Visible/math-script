@@ -240,7 +240,7 @@ void print_ASTNode(ASTNode node) {
         case NT_EMPTY:
             wprintf(L"EMPTY"); break;
         case NT_TOKEN:
-            wprintf(L"%s", OperType_string[node.tt]); break;
+            wprintf(L"%s", TokenType_string[node.tt]); break;
         case NT_INDENT:
             wprintf(L"INDENT: %hu", node.indent); break;
         case NT_EXPR:

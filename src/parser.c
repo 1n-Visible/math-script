@@ -48,24 +48,25 @@ static const OperType OperType_addsub[] = {
     [PLUS]=BINOP_ADD, [MINUS]=BINOP_SUB, [PM]=BINOP_PM
 };
 
-#define FREE_BUFF() free(which_buffer? new_buffer: buffer)
-static void parse_binop(ASTNode *buffer, ASTNode *new_buffer,
-                        const OperType *lut, bool *which_buffer) {
+// Iterate over buffer and write parsed version into new_buffer
+static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
+                          const OperType *oper_lut) {
     ASTNode node;
     Expression *expr, *left;
 
-    for (i=0, new_buffsize=0; i<buffsize; i++) {
+    size_t i, j;
+    for (i=0, j=0; i<buffsize; i++) {
         node=buffer[i];
         if (node.type!=NT_EXPR)
             goto push;
 
-        left=node.expr;
+        left=node.expr; // Construct chain of operators
         for (i++; i<buffsize-1; i+=2) {
             node=buffer[i];
-            if (node.type!=NT_TOKEN) {i--; break;}
-
-            OperType type = lut[node.tt];
-            if (!type) {i--; break;}
+            OperType optype = oper_lut[node.tt];
+            if (node.type!=NT_TOKEN or !optype) {
+                i--; break;
+            }
 
             node=buffer[i+1];
             if (node.type!=NT_EXPR) {
@@ -75,51 +76,58 @@ static void parse_binop(ASTNode *buffer, ASTNode *new_buffer,
 
             expr=new_Expression(NT_BINOP);
             expr->left=left;
-            expr->oper=type;
+            expr->oper=optype;
             expr->right=node.expr;
             left=expr;
-
         }
 
         node=(ASTNode){NT_EXPR, .expr=left};
 
         push:
-        new_buffer[new_buffsize++]=node;
+        new_buffer[j++]=node;
         if (node.type==NT_ERROR) break;
     }
 
-    node=new_buffer[new_buffsize-1];
-    if (new_buffsize==1) {
-        free(*which_buffer? new_buffer: buffer);
-        return node;
-    } else if (node.type==NT_ERROR) {
-        new_buffsize--; i=0;
-        free(*which_buffer? new_buffer: buffer);
-        return node;
-    } else {
-        node=new_buffer[0]; i=1;
-    }
+    return j;
+}
 
-    SWAP_PTR(buffer, new_buffer);
-    *which_buffer = not *which_buffer;
+// TODO: free Expression
+#define PARSE_BINOP(oper_lut) { \
+    new_buffsize=parse_binop(buffer, new_buffer, buffsize, oper_lut); \
+    SWAP_PTR(buffer, new_buffer); \
+    size_t tmp=buffsize; buffsize=new_buffsize; new_buffsize=tmp; \
+    which_buffer = not which_buffer; \
+    \
+    node=buffer[buffsize-1]; \
+    if (buffsize==1) { \
+        free(which_buffer? new_buffer: buffer); \
+        return node; \
+    } else if (node.type==NT_ERROR) { \
+        buffsize--; \
+        free(which_buffer? new_buffer: buffer); \
+        return node; \
+    } else \
+        node=buffer[0]; \
 }
 
 static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
-    size_t i, j, new_buffsize;
+    size_t new_buffsize;
     ASTNode node, *new_buffer=calloc(buffsize, sizeof(ASTNode));
     bool which_buffer=true;
 
-    parse_binop(buffer, new_buffer, OperType_muldiv, &which_buffer);
-    parse_binop(buffer, new_buffer, OperType_addsub, &which_buffer);
-    
-    FREE_BUFF();
+    PARSE_BINOP(OperType_muldiv);
+    PARSE_BINOP(OperType_addsub);
+
+    free(which_buffer? new_buffer: buffer);
     return node;
 }
 
-#undef FREE_BUFF
+#undef PARSE_BINOP
 
-static ASTNode *scan_inbrackets(Parser *parser, TokenType termin, size_t *return_size,
-                                short *index, ushort *rangetype);
+static ASTNode *scan_inbrackets(
+    Parser *parser, TokenType termin, size_t *return_size,
+    short *index, ushort *rangetype
+);
 
 static ASTNode parse_parenth(Parser *parser) {
     short index;
@@ -170,9 +178,10 @@ static ASTNode parse_braces(Parser *parser) {
     return ASTNode_error_from_Token(next_token(parser->lexer), L"Unexpected '{'");
 }
 
-//TODO: rename
-static ASTNode *scan_inbrackets(Parser *parser, TokenType termin,
-                           size_t *return_size, short *index, ushort *rangetype) {
+static ASTNode *scan_inbrackets(
+        Parser *parser, TokenType termin, size_t *return_size,
+        short *index, ushort *rangetype
+    ) {
     size_t i=0, buffsize=16;
     ASTNode node, *buffer=calloc(buffsize, sizeof(ASTNode));
     *index=-1;
