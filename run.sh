@@ -19,6 +19,6 @@ FILES="src/*.c src/rt_values/*.c"
 #"main.c lexer.c parser.c interpreter.c \
 #fraction.c intmath.c dict_tree.c charset.c"
 
-gcc $WARNINGS $OPTIONS $LINKS $FILES -o math-script
+gcc $WARNINGS $OPTIONS $LINKS $FILES -o math-script.out
 
-./math-script -s
+./math-script.out -s

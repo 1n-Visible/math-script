@@ -29,7 +29,6 @@
 *.dylib
 
 # Executables
-math-script
 *.exe
 *.out
 *.app
@@ -52,6 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# SublimeText
+# SublimeText files
 *.sublime-project
 *.sublime-workspace
