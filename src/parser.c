@@ -30,14 +30,24 @@ array[INDEX]
 LENGTH = #array
 SQR ^ CUBE [||ABS|| ^ FACTORIAL]
 POW
-SQRT | {PLUS ^ MINUS ^ PM}
+SQRT
+PLUS ^ MINUS ^ PM
 MUL, TRUEDIV, MATMUL, DIV, MOD
-PLUS, MINUS, PM, [MP]
+PLUS, MINUS, PM
 AND, XOR, OR
 EQ, NE, AEQ, NAE, REQ, NRE, LT, GT, LE, GE
 , KW_IS, KW_IN, KW_NOT_IN, SUBSET, SUPERSET
 KW_NOT, KW_AND, KW_OR # Ternary??
 */
+
+static const OperType OperType_unary_prefix[] = {
+    [PLUS]=UNARY_POS, [MINUS]=UNARY_NEG, [PM]=UNARY_PM
+};
+
+static const bool OperType_unary_prohibit[] = {
+    [PLUS]=true, [MINUS]=true, [PM]=true, [MUL]=true, [TRUEDIV]=true,
+    [DIV]=true, [MOD]=true, [POW]=true, [MATMUL_AT]=true
+};
 
 static const OperType OperType_muldiv[] = {
     [MUL]=BINOP_MUL, [TRUEDIV]=BINOP_TRUEDIV, [MATMUL_AT]=BINOP_MATMUL,
@@ -50,9 +60,85 @@ static const OperType OperType_addsub[] = {
 
 static const ushort lut_muldiv_len=MOD+1, lut_addsub_len=PM+1; // TODO: rename
 
+static size_t parse_sqrt(const ASTNode *buffer, ASTNode *new_buffer,
+                         size_t buffsize) {
+    size_t i, j;
+    for (i=0, j=0; i<buffsize; i++) {
+        ASTNode node=buffer[i];
+        if (node.type!=NT_TOKEN or node.tt!=SQRT)
+            goto push;
+
+        if (i==buffsize-1) {
+            node=ASTNode_error(node, L"unexpected end of input after √");
+            goto push;
+        }
+
+        node=buffer[++i];
+        if (node.type!=NT_EXPR) {
+            node=ASTNode_error(node, L"expected expression after √, got ...");
+            goto push;
+        }
+
+        Expression *expr=new_Expression(NT_UNARY_PREFIX);
+        expr->oper=UNARY_SQRT;
+        expr->value=node.expr;
+        node.expr=expr;
+
+        push:
+        new_buffer[j++]=node;
+        if (node.type==NT_ERROR) break;
+    }
+
+    return j;
+}
+
+static size_t parse_unary_prefix(const ASTNode *buffer, ASTNode *new_buffer,
+                                 size_t buffsize) {
+    size_t i, j;
+    for (i=0, j=0; i<buffsize; i++) {
+        ASTNode node=buffer[i];
+        if (node.type!=NT_TOKEN)
+            goto push;
+
+        OperType optype = ((node.tt<lut_addsub_len)?
+                           OperType_unary_prefix[node.tt]: 0);
+        if (!optype) goto push;
+        if (i>0) {
+            node=buffer[i-1];
+            if (node.type==NT_EXPR) {
+                node=buffer[i];
+                goto push;
+            }
+            if (node.type==NT_TOKEN and OperType_unary_prohibit[node.tt]) {
+                node=ASTNode_error(buffer[i], L"plus/minus after operation");
+                goto push;
+            }
+        }
+
+        node=buffer[++i];
+        if (node.type!=NT_EXPR) {
+            node=ASTNode_error(node, L"expected expression after √, got ...");
+            goto push;
+        }
+
+        Expression *expr=new_Expression(NT_UNARY_PREFIX);
+        expr->oper=optype;
+        expr->value=node.expr;
+        node.expr=expr;
+
+        push:
+        new_buffer[j++]=node;
+        if (node.type==NT_ERROR) break;
+    }
+
+    return j;
+}
+
 // Iterate over buffer and write parsed version into new_buffer
-static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
-                          const OperType *oper_lut, ushort lut_len) {
+static size_t parse_binop(
+            const ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
+            const OperType *oper_lut, ushort lut_len
+    ) {
     ASTNode node;
     Expression *expr, *left;
 
@@ -82,7 +168,6 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
             expr->right=node.expr;
             left=expr;
         }
-
         node=(ASTNode){NT_EXPR, .expr=left};
 
         push:
@@ -93,9 +178,7 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
     return j;
 }
 
-// TODO: free Expression
-#define PARSE_BINOP(oper_lut, lut_len) { \
-    new_buffsize=parse_binop(buffer, new_buffer, buffsize, oper_lut, lut_len); \
+#define SWAP_BUFF() { \
     SWAP_PTR(buffer, new_buffer); \
     size_t tmp=buffsize; buffsize=new_buffsize; new_buffsize=tmp; \
     which_buffer = not which_buffer; \
@@ -111,18 +194,29 @@ static size_t parse_binop(ASTNode *buffer, ASTNode *new_buffer, size_t buffsize,
     } else node=buffer[0]; \
 }
 
+// TODO: free Expression
+#define PARSE_BINOP(oper_lut, lut_len) { \
+    new_buffsize=parse_binop(buffer, new_buffer, buffsize, oper_lut, lut_len); \
+    SWAP_BUFF() \
+}
+
 static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
     size_t new_buffsize;
     ASTNode node, *new_buffer=calloc(buffsize, sizeof(ASTNode));
     bool which_buffer=true;
 
-    PARSE_BINOP(OperType_muldiv, lut_muldiv_len);
-    PARSE_BINOP(OperType_addsub, lut_addsub_len);
+    new_buffsize=parse_sqrt(buffer, new_buffer, buffsize);
+    SWAP_BUFF()
+    new_buffsize=parse_unary_prefix(buffer, new_buffer, buffsize);
+    SWAP_BUFF()
+    PARSE_BINOP(OperType_muldiv, lut_muldiv_len)
+    PARSE_BINOP(OperType_addsub, lut_addsub_len)
 
     free(which_buffer? new_buffer: buffer);
     return node;
 }
 
+#undef SWAP_BUFF
 #undef PARSE_BINOP
 
 static ASTNode *scan_inbrackets(
