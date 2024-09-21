@@ -1,3 +1,7 @@
+# Build files and executables
+bin/*
+build/*
+
 # Prerequisites
 *.d
 

@@ -44,7 +44,7 @@ int exec_shell(FILE *file) {
 }
 
 int exec_file() {
-    FILE *file = fopen("input.txt", "r");
+    FILE *file = fopen("docs/input.txt", "r");
     if (file==NULL) {
         perror("Error opening file");
         return 1;
