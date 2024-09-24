@@ -14,7 +14,7 @@ WARNINGS="-Wall -Wno-error -Wstrict-aliasing \
 OPTIONS="-g -fshort-enums -finline-small-functions"
 #-fcx-fortran-rules? -ffast-math -fpack-struct
 
-LINKS="-lm"
+LINKS="-lm -Iinclude"
 FILES="src/*.c src/rt_values/*.c"
 #"main.c lexer.c parser.c interpreter.c \
 #fraction.c intmath.c dict_tree.c charset.c"

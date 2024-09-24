@@ -1,6 +1,7 @@
 # Build files and executables
 bin/*
 build/*
+lib/*
 
 # Prerequisites
 *.d
