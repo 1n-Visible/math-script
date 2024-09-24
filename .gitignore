@@ -1,10 +1,7 @@
-# Build files and executables
-bin/*
-build/*
-lib/*
-
-# Prerequisites
+# Prerequisites, precompiled headers
 *.d
+*.gch
+*.pch
 
 # Object files
 *.o
@@ -17,11 +14,8 @@ lib/*
 *.map
 *.exp
 
-# Precompiled Headers
-*.gch
-*.pch
-
 # Libraries
+#lib/*
 *.lib
 *.a
 *.la
@@ -34,6 +28,7 @@ lib/*
 *.dylib
 
 # Executables
+bin/*
 *.exe
 *.out
 *.app
@@ -46,15 +41,6 @@ lib/*
 *.su
 *.idb
 *.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
 
 # SublimeText files
 *.sublime-project

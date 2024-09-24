@@ -1,3 +1,4 @@
+.PHONY: all clean
 CC=gcc
 
 WARNINGS=-Wall -Wpedantic -Wno-error \
@@ -8,23 +9,27 @@ WARNINGS=-Wall -Wpedantic -Wno-error \
 -Wno-switch -Wno-unused-variable -Wno-discarded-qualifiers
 DEBUG=
 OPTIONS=-O0 -fshort-enums -finline-small-functions
-LINKS=-lm #link math.h
+LINKS=-Iinclude -lm #link math.h
 CFLAGS=$(DEBUG) $(WARNINGS) $(OPTIONS) $(LINKS)
 
 BIN=bin/math-script
-BUILD=build
-SRC=src
 #SRCS=$(wildcard $(SRC)/*.c)
-SRCS=$(find . $(SRC)/*.c)
-OBJECTS=$(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(SRCS))
+SRCS=$(find . src/*.c)
+OBJECTS=$(patsubst src/%.c, build/%.o, $(SRCS))
 
-all: $(BIN)
+SRC_SUBDIRS=$(shell find src -type d)
+BUILD_SUBDIRS=$(patsubst src%,build%,$(SRC_SUBDIRS))
 
-$(BIN): $(OBJECTS) rt_values.o
+SRC_FILES=$(foreach dir,$(SRC_SUBDIRS),$(wildcard $(dir)/*.c))
+BUILD_FILES=$(patsubst src/%.c,build/%.o,$(SRC_FILES))
+
+all: $(BUILD_SUBDIRS) $(BIN)
+
+$(BIN): $(BUILD_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
-rt_values.o:
-	$(CC) $(CFLAGS) -c src/rt_values/*.c -o build/rt_values.o
+$(BUILD_SUBDIRS):
+	mkdir -p $@
 
 build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
