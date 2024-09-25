@@ -43,7 +43,38 @@ const number_t number_NaN = {
 
 static number_t normalize_number(number_t num);
 
-void print_number(number_t num);
+number_t number_from_int(int64_t integer, bool is_real) {
+    union _Real real={.integer=integer};
+    if (is_real)
+        return (number_t){
+            .real=real, .real_t=NUMT_INT, .imag=_Real_zero, .imag_t=NUMT_INT
+        };
+    return (number_t){
+        .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_INT
+    };
+}
+
+number_t number_from_float(double floating, bool is_real) {
+    union _Real real={.floating=floating};
+    if (is_real)
+        return (number_t){
+            .real=real, .real_t=NUMT_FLOAT, .imag=_Real_zero, .imag_t=NUMT_INT
+        };
+    return (number_t){
+        .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_FLOAT
+    };
+}
+
+void print_number(number_t num, bool parenth, bool spaces) { //TODO: account for signs
+    bool is_real=number_is_real(num), is_imag=_Real_to_double(num.imag, num.imag_t);
+    parenth&=(is_real and is_imag);
+    if (parenth) putwchar(L'(');
+    if (is_real) print_Real(num.real, num.real_t);
+    if (spaces) wprintf(L" + ");
+    else wprintf(L"+");
+    if (is_imag) print_Real(num.imag, num.imag_t);
+    if (parenth) putwchar(L')');
+}
 
 bool number_to_bool(number_t num) {
     return not (_Real_to_bool(num.real, num.real_t) or

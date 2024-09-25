@@ -96,20 +96,38 @@ RTExpr *Scope_get_var(Scope *scope, const wchar_t *varname) {
 
 RTExpr *eval_Atom(Scope *scope, Atom atom) {
     RTExpr *rt_expr;
+    RTValue *rt_value;
+
     switch (atom.type) {
         case AT_IDENTIFIER:
             rt_expr=Scope_get_var(scope, atom.identifier);
             if (rt_expr!=NULL) //TODO: cycle detection
                 return rt_expr;
-            return NULL; //TODO: rt_var
+
+            rt_expr=alloc_RTExpr(RT_VAR);
+            rt_expr->varname=atom.identifier;
+            return rt_expr;
+
         case AT_CHAR:
         case AT_STRING:
         case AT_FSTRING:
             break;
+
         case AT_INT:
-            return NULL;
+            rt_value=new_RTValue(RT_NUMBER);
+            rt_value->number=number_from_int(atom.integer, atom.is_real);
+            break;
         case AT_FLOAT:
-        	break;
+        	rt_value=new_RTValue(RT_NUMBER);
+            rt_value->number=number_from_float(atom.floating_point, atom.is_real);
+            break;
+        default:
+            return NULL;
     }
-    return NULL;
+
+    rt_expr=alloc_RTExpr(RT_VALUE);
+    rt_expr->rt_value=rt_value;
+    return rt_expr;
 }
+
+RTExpr *eval_Expression(Scope *scope, Expression *expr);

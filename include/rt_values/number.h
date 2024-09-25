@@ -18,7 +18,10 @@ extern const number_t number_zero, number_unit, number_imagunit;
 extern const number_t number_ReInf, number_ImInf;
 extern const number_t number_ReNaN, number_ImNaN, number_NaN;
 
-void print_number(number_t);
+number_t number_from_int(int64_t integer, bool is_real);
+number_t number_from_float(double floating, bool is_real);
+
+void print_number(number_t, bool parenth, bool spaces);
 bool number_to_bool(number_t);
 wchar_t *number_to_string(number_t);
 bool number_is_real(number_t);

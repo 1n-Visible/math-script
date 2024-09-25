@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "../intmath.h"
@@ -13,6 +14,8 @@ typedef struct {
 } Fraction;
 
 Fraction fraction(int64_t m, int64_t n);
+
+void print_Fraction(Fraction);
 
 bool Fraction_sign(Fraction);
 int64_t Fraction_to_int(Fraction);

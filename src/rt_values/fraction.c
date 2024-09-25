@@ -11,6 +11,10 @@ Fraction fraction(int64_t m, int64_t n) {
     return (Fraction){m/(int64_t)d, (uint64_t)n/d};
 }
 
+void print_Fraction(Fraction f) {
+    wprintf(L"%ld/%lu", f.m, f.n);
+}
+
 bool Fraction_sign(Fraction f) {
     return f.m<0;
 }

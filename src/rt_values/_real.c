@@ -39,6 +39,14 @@ static union _Real normalize_Real(union _Real real,
     return (union _Real){.fraction=fract};
 }
 
+void print_Real(union _Real real, enum num_type type) {
+    switch (type) {
+        case NUMT_INT: wprintf(L"%ld", real.integer); break;
+        case NUMT_FLOAT: wprintf(L"%lf", real.floating); break;
+        case NUMT_FRACT: print_Fraction(real.fraction);
+    }
+}
+
 bool _Real_to_bool(union _Real real, enum num_type type) {
     switch (type) {
         case NUMT_INT: return real.integer;

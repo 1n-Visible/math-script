@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <iso646.h>
 
@@ -17,6 +18,8 @@ union _Real {
 
 extern const union _Real _Real_zero, _Real_unit;
 extern const union _Real _Real_Inf, _Real_NaN;
+
+void print_Real(union _Real, enum num_type);
 
 bool _Real_to_bool(union _Real, enum num_type);
 int64_t _Real_to_int(union _Real, enum num_type);
