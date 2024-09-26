@@ -94,23 +94,20 @@ RTExpr *Scope_get_var(Scope *scope, const wchar_t *varname) {
     return Scope_get_var(scope->parent, varname);
 }
 
-RTExpr *eval_Atom(Scope *scope, Atom atom) {
+static RTExpr *eval_Atom(Atom atom) { // frees Atom
     RTExpr *rt_expr;
     RTValue *rt_value;
 
     switch (atom.type) {
         case AT_IDENTIFIER:
-            rt_expr=Scope_get_var(scope, atom.identifier);
-            if (rt_expr!=NULL) //TODO: cycle detection
-                return rt_expr;
-
             rt_expr=alloc_RTExpr(RT_VAR);
             rt_expr->varname=atom.identifier;
             return rt_expr;
 
         case AT_CHAR:
-        case AT_STRING:
+        case AT_STRING: //TODO
         case AT_FSTRING:
+            rt_value=NULL;
             break;
 
         case AT_INT:
@@ -119,7 +116,7 @@ RTExpr *eval_Atom(Scope *scope, Atom atom) {
             break;
         case AT_FLOAT:
         	rt_value=new_RTValue(RT_NUMBER);
-            rt_value->number=number_from_float(atom.floating_point, atom.is_real);
+            rt_value->number=number_from_float(atom.floating, atom.is_real);
             break;
         default:
             return NULL;
@@ -130,4 +127,42 @@ RTExpr *eval_Atom(Scope *scope, Atom atom) {
     return rt_expr;
 }
 
-RTExpr *eval_Expression(Scope *scope, Expression *expr);
+RTExpr *eval_Expression(Scope *scope, Expression *expr) { // frees Expression
+    if (expr==NULL)
+        return NULL;
+
+    RTExpr *rt_expr=NULL;
+    switch (expr->type) {
+        case NT_ATOM:
+            rt_expr=eval_Atom(expr->atom);
+            break;
+
+        case NT_UNARY_PREFIX:
+            rt_expr=alloc_RTExpr(RT_UNARY_PREFIX);
+            rt_expr->oper=expr->oper;
+            rt_expr->value=eval_Expression(scope, expr->value);
+            break;
+        case NT_UNARY_POSTFIX:
+            rt_expr=alloc_RTExpr(RT_UNARY_POSTFIX);
+            rt_expr->oper=expr->oper;
+            rt_expr->value=eval_Expression(scope, expr->value);
+            break;
+
+        case NT_BINOP:
+            rt_expr=alloc_RTExpr(RT_BINOP);
+            rt_expr->oper=expr->oper;
+            rt_expr->left=eval_Expression(scope, expr->left);
+            rt_expr->right=eval_Expression(scope, expr->right);
+            break;
+        case NT_COMP:
+            // TODO: Evaluate == != < > <=...
+        case NT_RANGE:
+        case NT_SUM:
+        case NT_PROD:
+        case NT_INT:
+            break;
+    }
+
+    free(expr);
+    return rt_expr;
+}

@@ -27,7 +27,6 @@ Scope *new_Scope(Scope *parent, wchar_t *name);
 void free_Scope(Scope *scope);
 RTExpr *Scope_get_var(Scope *scope, const wchar_t *varname);
 
-RTExpr *eval_Atom(Scope *scope, Atom atom);
 RTExpr *eval_Expression(Scope *scope, Expression *expr);
 
 #endif

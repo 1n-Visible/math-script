@@ -23,7 +23,7 @@ typedef struct { // TODO: AT_IDENTIFIER, copy lengths
     union {
         wchar_t *identifier, character, *string;
         int64_t integer;
-        double floating_point;
+        double floating;
     };
 } Atom;
 

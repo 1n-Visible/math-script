@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     setlocale(LC_CTYPE, "el_GR.UTF-8");
 
     putwchar(L'\n');
-    if (argc>=2 and !strncmp(argv[1], "-s", 3))
+    if (argc>=2 and !strncmp(argv[1], "-s", 3)) //TODO: interactive mode -i flag
         print_size_info();
 
     wprintf(

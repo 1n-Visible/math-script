@@ -100,19 +100,14 @@ void free_RTExpr(RTExpr *rt_expr) {
             free_RTValue(rt_expr->rt_value); break;
         case RT_VAR:
             free(rt_expr->varname); break;
-        case RT_UNARY_FUNC:
-        case RT_UNARY_POS:
-        case RT_UNARY_NEG:
-        case RT_UNARY_PM:
+        case RT_UNARY_PREFIX:
+        case RT_UNARY_POSTFIX:
             free_RTExpr(rt_expr->value); break;
-        case RT_BINOP_POW:
-        case RT_BINOP_MUL:
-        case RT_BINOP_TRUEDIV:
-        case RT_BINOP_ADD:
-        case RT_BINOP_SUB:
-        case RT_BINOP_PM:
+        case RT_BINOP:
             free_RTExpr(rt_expr->left);
             free_RTExpr(rt_expr->right);
+            break;
+        case RT_CALL:
     }
 
     free(rt_expr);

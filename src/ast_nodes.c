@@ -5,9 +5,11 @@ void free_Atom(Atom *atom) {
         return;
 
     switch (atom->type) {
+        case AT_IDENTIFIER:
+            free(atom->identifier); break;
         case AT_STRING:
         case AT_FSTRING:
-            free(atom->string);
+            free(atom->string); break;
     }
 }
 
@@ -24,7 +26,7 @@ void print_Atom(Atom atom) {
             break;
         case AT_FLOAT:
             wprintf(
-                L"Atom(%lg%s", atom.floating_point,
+                L"Atom(%lg%s", atom.floating,
                 atom.is_real? ")": "i)"
             );
     }
@@ -33,7 +35,7 @@ void print_Atom(Atom atom) {
 Atom Atom_from_Token(Token token) { // frees Token
     wchar_t c, *end_string;
     int64_t integer;
-    double floating_point;
+    double floating;
     switch (token.type) {
         case KW_NONE:
             return (Atom){AT_NONE};
@@ -58,17 +60,17 @@ Atom Atom_from_Token(Token token) { // frees Token
             };
         case REAL_FLOAT:
         case IMAG_FLOAT:
-            floating_point=wcstod(token.value, &end_string);
+            floating=wcstod(token.value, &end_string);
             free(token.value);
             return (Atom){
                 AT_FLOAT, .is_real=(token.type==REAL_FLOAT),
-                .floating_point=floating_point
+                .floating=floating
             };
 
         case KW_INF:
-            return (Atom){AT_FLOAT, .is_real=true, .floating_point=INFINITY};
+            return (Atom){AT_FLOAT, .is_real=true, .floating=INFINITY};
         case KW_NAN:
-            return (Atom){AT_FLOAT, .is_real=true, .floating_point=NAN};
+            return (Atom){AT_FLOAT, .is_real=true, .floating=NAN};
     }
 
     return (Atom){AT_EMPTY};
