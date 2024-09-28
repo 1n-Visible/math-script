@@ -20,6 +20,7 @@ vector_t new_vector(ushort dim);
 vector_t vector_from_numbers(number_t *numbers, ushort dim);
 void free_vector(vector_t *);
 vector_t copy_vector(vector_t);
+void print_vector(vector_t);
 
 number_t vector_getindex(vector_t, ushort index);
 void vector_setindex(vector_t, ushort index, number_t);

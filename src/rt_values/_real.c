@@ -39,6 +39,7 @@ static union _Real normalize_Real(union _Real real,
     return (union _Real){.fraction=fract};
 }
 
+//TODO: account for the signs:
 void print_Real(union _Real real, enum num_type type) {
     switch (type) {
         case NUMT_INT: wprintf(L"%ld", real.integer); break;

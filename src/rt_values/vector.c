@@ -39,6 +39,16 @@ vector_t copy_vector(vector_t vector) {
     return vector_copy;
 }
 
+void print_vector(vector_t vector) {
+    putwchar(L'(');
+    print_Real(vector.components[0], vector.types[0]);
+    for (ushort i=1; i<vector.dim; i++) {
+        wprintf(L", ");
+        print_Real(vector.components[i], vector.types[i]);
+    }
+    putwchar(L')');
+}
+
 
 number_t vector_getindex(vector_t vector, ushort index) {
     if (index>=vector.dim)

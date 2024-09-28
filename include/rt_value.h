@@ -34,7 +34,7 @@ typedef struct RTExpr RTExpr;
 struct RTValue {
     enum rt_value_t type;
     union {
-        wchar_t *errcode;
+        wchar_t *errormsg;
         number_t number; vector_t vector; /*array_t array;
         wchar_t character; string_t string;*/
     };
@@ -52,7 +52,8 @@ struct RTExpr {
 
 RTValue *new_RTValue(enum rt_value_t type);
 void free_RTValue(RTValue *);
-RTValue *copy_RTValue(RTValue *rt_value);
+RTValue *copy_RTValue(RTValue *);
+void print_RTValue(RTValue *);
 
 
 #define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *value)
@@ -76,5 +77,6 @@ RT_VALUE_OPER(pow)
 extern RTExpr *alloc_RTExpr(enum rt_expr_t type);
 void free_RTExpr(RTExpr *);
 RTExpr *eval_RTExpr(RTExpr *);
+void print_RTExpr(RTExpr *);
 
 #endif

@@ -12,7 +12,7 @@ void free_RTValue(RTValue *rt_value) {
 
     switch (rt_value->type) {
         case RT_ERROR:
-            free(rt_value->errcode); break;
+            free(rt_value->errormsg); break;
         case RT_VECTOR:
             free_vector(&rt_value->vector); break;
         case RT_ARRAY:
@@ -31,7 +31,7 @@ RTValue *copy_RTValue(RTValue *rt_value) {
     RTValue *rt_value_copy = new_RTValue(type);
     switch (type) {
         case RT_ERROR:
-            rt_value_copy->errcode=string_copy(rt_value->errcode);
+            rt_value_copy->errormsg=string_copy(rt_value->errormsg);
             break;
         case RT_VECTOR:
             rt_value_copy->vector=copy_vector(rt_value->vector);
@@ -42,6 +42,20 @@ RTValue *copy_RTValue(RTValue *rt_value) {
     }
 
     return rt_value_copy;
+}
+
+void print_RTValue(RTValue *rt_value) {
+    switch (rt_value->type) {
+        case RT_ERROR:
+            wprintf(L"Runtime Error: %ls\n", rt_value->errormsg);
+            break;
+        case RT_NUMBER:
+            print_number(rt_value->number, false, false);
+            break;
+        case RT_VECTOR:
+            print_vector(rt_value->vector);
+            break;
+    }
 }
 
 

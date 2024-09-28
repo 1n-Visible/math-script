@@ -65,8 +65,11 @@ number_t number_from_float(double floating, bool is_real) {
     };
 }
 
-void print_number(number_t num, bool parenth, bool spaces) { //TODO: account for signs
-    bool is_real=number_is_real(num), is_imag=_Real_to_double(num.imag, num.imag_t);
+//TODO: account for signs:
+void print_number(number_t num, bool parenth, bool spaces) {
+    bool is_real=number_is_real(num);
+    bool is_imag=_Real_to_double(num.imag, num.imag_t);
+
     parenth&=(is_real and is_imag);
     if (parenth) putwchar(L'(');
     if (is_real) print_Real(num.real, num.real_t);

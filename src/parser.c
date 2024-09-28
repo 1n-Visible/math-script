@@ -331,8 +331,8 @@ static ASTNode *scan_inbrackets(
     return buffer;
 }
 
-#define _BRACK_ERR(errcode) \
-    node=ASTNode_error_from_Token(token, L"Unexpected " errcode); break;
+#define _BRACK_ERR(errormsg) \
+    node=ASTNode_error_from_Token(token, L"Unexpected " errormsg); break;
 
 ASTNode parse_line(Parser *parser) {
     size_t i=0, buffsize=16;
