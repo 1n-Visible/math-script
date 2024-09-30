@@ -79,6 +79,15 @@ Atom Atom_from_Token(Token token) { // frees Token
 
 const ushort RANGE_START=1, RANGE_STOP=2;
 
+const char *operators_string[] = {
+    NULL, "#", "abs", "²", "³", "!", "**", "√",
+    "*", "/", "@", "//", "%",
+    "+", "-", "±", "+", "-", "±",
+    "&", "^", "|",
+    "==", "≠", "~", "!~", "≈", "!≈", "<", ">", "≤", "≥",
+    "is", "∈", "∉", "⊂", "⊃"
+};
+
 const char *OperType_string[] = {
     NULL, "UNARY_LENGTH", "UNARY_ABS", "UNARY_SQR", "UNARY_CUBE", "UNARY_FACTORIAL",
     "BINOP_POW", "UNARY_SQRT",

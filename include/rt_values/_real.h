@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <wchar.h>
 #include <iso646.h>
 
 #include "fraction.h"

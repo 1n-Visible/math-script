@@ -45,6 +45,7 @@ typedef enum OperType {
     COMP_IS, COMP_IN, COMP_NOT_IN, COMP_SUBSET, COMP_SUPERSET
 } OperType;
 
+extern const char *operators_string[];
 extern const char *OperType_string[];
 
 /* === EXPRESSIONS === */

@@ -331,6 +331,16 @@ static ASTNode *scan_inbrackets(
     return buffer;
 }
 
+static void print_ASTbuffer(ASTNode *buffer, size_t buffsize) {
+    wprintf(L"buffer: ");
+    print_ASTNode(buffer[0]);
+    for (size_t i=1; i<buffsize; i++) {
+        wprintf(L", ");
+        print_ASTNode(buffer[i]);
+    }
+    wprintf(L".\n");
+}
+
 #define _BRACK_ERR(errormsg) \
     node=ASTNode_error_from_Token(token, L"Unexpected " errormsg); break;
 
@@ -345,14 +355,11 @@ ASTNode parse_line(Parser *parser) {
             case INDENT:
                 continue;
             case PAREN_L:
-                node=parse_parenth(parser);
-                break;
+                node=parse_parenth(parser); break;
             case SBRACK_L:
-                node=parse_brackets(parser);
-                break;
+                node=parse_brackets(parser); break;
             case CBRACK_L:
-                node=parse_braces(parser);
-                break;
+                node=parse_braces(parser); break;
             case PAREN_R:  _BRACK_ERR(L"')'");
             case SBRACK_R: _BRACK_ERR(L"']'");
             case CBRACK_R: _BRACK_ERR(L"'}'");
@@ -372,15 +379,6 @@ ASTNode parse_line(Parser *parser) {
     buffsize=i;
     if (node.type<=NT_EMPTY)
         goto end;
-
-    wprintf(L"buffer: ");
-    print_ASTNode(buffer[0]);
-    for (i=1; i<buffsize; i++) {
-        wprintf(L", ");
-        print_ASTNode(buffer[i]);
-    }
-    wprintf(L".\n");
-    
     node=parse_expr(buffer, buffsize);
 
     end:

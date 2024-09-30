@@ -130,3 +130,29 @@ void free_RTExpr(RTExpr *rt_expr) {
 RTExpr *eval_RTExpr(RTExpr *rt_expr) { //TODO
     return NULL;
 }
+
+void print_RTExpr(RTExpr *rt_expr) {
+    const char *operstr=operators_string[rt_expr->oper];
+
+    switch (rt_expr->type) {
+        case RT_VALUE:
+            print_RTValue(rt_expr->rt_value); break;
+        case RT_VAR:
+            wprintf(rt_expr->varname); break;
+        case RT_UNARY_PREFIX:
+            wprintf(L" %s ", operstr);
+            print_RTExpr(rt_expr->value);
+            break;
+        case RT_UNARY_POSTFIX:
+            print_RTExpr(rt_expr->value);
+            wprintf(L" %s ", operstr);
+            break;
+        case RT_BINOP:
+            print_RTExpr(rt_expr->left);
+            wprintf(L" %s ", operstr);
+            print_RTExpr(rt_expr->right);
+            break;
+        case RT_CALL: //TODO
+            break;
+    }
+}

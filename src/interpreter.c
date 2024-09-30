@@ -43,7 +43,8 @@ void collect_RTExpr(RTExpr *rt_expr) {
     for (size_t i=0; i<register_len; i++) {
         if (global_value_register[i]==rt_expr) {
             global_value_register[i]=global_value_register[--register_len];
-            return free_RTExpr(rt_expr);
+            free_RTExpr(rt_expr);
+            return;
         }
     }
 

@@ -45,9 +45,12 @@ struct RTExpr {
     bool is_defined;
     OperType oper;
 
-    RTValue *rt_value;
-    wchar_t *varname;
-    RTExpr *value, *left, *right;
+    union {
+        RTValue *rt_value;
+        wchar_t *varname;
+        RTExpr *value, *left;
+    };
+    RTExpr *right;
 };
 
 RTValue *new_RTValue(enum rt_value_t type);
