@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <math.h>
-#include <wchar.h>
 
 #include "../intmath.h"
 
@@ -14,12 +14,13 @@ typedef struct {
 } Fraction;
 
 Fraction fraction(int64_t m, int64_t n);
-
-void print_Fraction(Fraction);
-
 bool Fraction_sign(Fraction);
+
+bool Fraction_to_bool(Fraction);
 int64_t Fraction_to_int(Fraction);
 double Fraction_to_double(Fraction);
+char *Fraction_to_str(Fraction);
+
 int64_t Fraction_floor(Fraction);
 int64_t Fraction_ceil(Fraction);
 int64_t Fraction_round(Fraction);

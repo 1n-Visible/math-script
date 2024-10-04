@@ -45,15 +45,20 @@ RTValue *copy_RTValue(RTValue *rt_value) {
 }
 
 void print_RTValue(RTValue *rt_value) {
+    wchar_t *string;
     switch (rt_value->type) {
         case RT_ERROR:
             wprintf(L"Runtime Error: %ls\n", rt_value->errormsg);
             break;
         case RT_NUMBER:
-            print_number(rt_value->number, false, false);
+            string=number_to_str(rt_value->number, NUMEXPR_NONE, false);
+            wprintf(string);
+            free(string);
             break;
         case RT_VECTOR:
-            print_vector(rt_value->vector);
+            string=vector_to_str(rt_value->vector);
+            wprintf(string);
+            free(string);
             break;
     }
 }
@@ -121,7 +126,8 @@ void free_RTExpr(RTExpr *rt_expr) {
             free_RTExpr(rt_expr->left);
             free_RTExpr(rt_expr->right);
             break;
-        case RT_CALL:
+        case RT_CALL: //TODO
+            return;
     }
 
     free(rt_expr);
@@ -140,12 +146,12 @@ void print_RTExpr(RTExpr *rt_expr) {
         case RT_VAR:
             wprintf(rt_expr->varname); break;
         case RT_UNARY_PREFIX:
-            wprintf(L" %s ", operstr);
+            wprintf(L"%s", operstr);
             print_RTExpr(rt_expr->value);
             break;
         case RT_UNARY_POSTFIX:
             print_RTExpr(rt_expr->value);
-            wprintf(L" %s ", operstr);
+            wprintf(L"%s", operstr);
             break;
         case RT_BINOP:
             print_RTExpr(rt_expr->left);
@@ -153,6 +159,6 @@ void print_RTExpr(RTExpr *rt_expr) {
             print_RTExpr(rt_expr->right);
             break;
         case RT_CALL: //TODO
-            break;
+            return;
     }
 }

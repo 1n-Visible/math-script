@@ -21,9 +21,10 @@ extern const number_t number_ReNaN, number_ImNaN, number_NaN;
 number_t number_from_int(int64_t integer, bool is_real);
 number_t number_from_float(double floating, bool is_real);
 
-void print_number(number_t, bool parenth, bool spaces);
+enum num_expr_t {NUMEXPR_NONE, NUMEXPR_LEFT, NUMEXPR_RIGHT};
+
 bool number_to_bool(number_t);
-wchar_t *number_to_string(number_t);
+wchar_t *number_to_str(number_t, enum num_expr_t, bool spaces);
 bool number_is_real(number_t);
 
 

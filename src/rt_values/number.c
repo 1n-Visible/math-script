@@ -65,26 +65,64 @@ number_t number_from_float(double floating, bool is_real) {
     };
 }
 
-//TODO: account for signs:
-void print_number(number_t num, bool parenth, bool spaces) {
-    bool is_real=number_is_real(num);
-    bool is_imag=_Real_to_double(num.imag, num.imag_t);
-
-    parenth&=(is_real and is_imag);
-    if (parenth) putwchar(L'(');
-    if (is_real) print_Real(num.real, num.real_t);
-    if (spaces) wprintf(L" + ");
-    else wprintf(L"+");
-    if (is_imag) print_Real(num.imag, num.imag_t);
-    if (parenth) putwchar(L')');
-}
 
 bool number_to_bool(number_t num) {
     return not (_Real_to_bool(num.real, num.real_t) or
                 _Real_to_bool(num.imag, num.imag_t));
 }
 
-wchar_t *number_to_string(number_t num);
+static const char *_sign_table[] = {"+", " + ", "-", " - "};
+
+wchar_t *number_to_str(number_t num, enum num_expr_t expr_t, bool spaces) {
+    union _Real imag=num.imag; enum num_type imag_t=num.imag_t;
+    bool real_sign=_Real_sign(num.real, num.real_t);
+    bool imag_sign=_Real_sign(imag, imag_t);
+    
+    size_t strsize;
+    wchar_t *real_str, *string;
+    if (not _Real_to_bool(imag, imag_t)) {
+        real_str=_Real_to_str(num.real, num.real_t);
+        if (expr_t!=NUMEXPR_RIGHT or !real_sign)
+            return real_str;
+        
+        strsize=wcslen(real_str)+3;
+        string=calloc(strsize, sizeof(wchar_t));
+        swprintf(string, strsize, L"(%ls)", real_str);
+        
+        free(real_str);
+        return string;
+    }
+    
+    wchar_t *imag_str;
+    if (not _Real_to_bool(num.real, num.real_t)) {
+        imag_str=_Real_to_str(imag, imag_t);
+        
+        strsize=wcslen(imag_str)+4;
+        string=calloc(strsize, sizeof(wchar_t));
+        swprintf(
+            string, strsize,
+            (expr_t!=NUMEXPR_RIGHT or !imag_sign)? L"%lsi": L"(%lsi)", imag_str
+        );
+        
+        free(imag_str);
+        return string;
+    }
+    
+    imag=_Real_abs(imag, imag_t, &imag_t);
+    imag_str=_Real_to_str(imag, imag_t);
+    real_str=_Real_to_str(num.real, num.real_t);
+    
+    strsize=wcslen(real_str)+wcslen(imag_str)+8;
+    string=calloc(strsize, sizeof(wchar_t));
+    swprintf(
+        string, strsize, (expr_t==NUMEXPR_NONE)? L"%ls%s%lsi": L"(%ls%s%lsi)",
+        real_str, _sign_table[(imag_sign<<1) | spaces], imag_str
+    );
+    
+    free(real_str);
+    free(imag_str);
+    return string;
+}
 
 bool number_is_real(number_t num) {
     return not _Real_to_bool(num.imag, num.imag_t);

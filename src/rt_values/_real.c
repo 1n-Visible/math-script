@@ -39,14 +39,14 @@ static union _Real normalize_Real(union _Real real,
     return (union _Real){.fraction=fract};
 }
 
-//TODO: account for the signs:
-void print_Real(union _Real real, enum num_type type) {
+bool _Real_sign(union _Real real, enum num_type type) {
     switch (type) {
-        case NUMT_INT: wprintf(L"%ld", real.integer); break;
-        case NUMT_FLOAT: wprintf(L"%lf", real.floating); break;
-        case NUMT_FRACT: print_Fraction(real.fraction);
+        case NUMT_INT: return real.integer<0;
+        case NUMT_FLOAT: return real.floating<0.0;
     }
+    return Fraction_sign(real.fraction);
 }
+
 
 bool _Real_to_bool(union _Real real, enum num_type type) {
     switch (type) {
@@ -78,14 +78,26 @@ Fraction _Real_to_Fraction(union _Real real, enum num_type type) {
     return (Fraction){real.integer, 1ul};
 }
 
-bool _Real_sign(union _Real real, enum num_type type) {
+wchar_t *_Real_to_str(union _Real real, enum num_type type) {
+    wchar_t *string;
     switch (type) {
-        case NUMT_INT: return real.integer<0;
-        case NUMT_FLOAT: return real.floating<0.0;
+        case NUMT_INT:
+            string=calloc(25, sizeof(wchar_t));
+            swprintf(string, 25, L"%lld", real.integer);
+            return string;
+        case NUMT_FLOAT: //TODO: remote formatting system
+            string=calloc(50, sizeof(wchar_t));
+            swprintf(string, 50, L"%lf", real.floating);
+            return string;
     }
-    return Fraction_sign(real.fraction);
+    
+    char *fract_str=Fraction_to_str(real.fraction);
+    size_t strsize=strlen(fract_str)+1;
+    string=calloc(strsize, sizeof(wchar_t));
+    swprintf(string, strsize, L"%s", fract_str);
+    free(fract_str);
+    return string;
 }
-
 
 
 #define REAL_UNARY(name) \

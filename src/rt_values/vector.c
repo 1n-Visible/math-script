@@ -39,16 +39,35 @@ vector_t copy_vector(vector_t vector) {
     return vector_copy;
 }
 
-void print_vector(vector_t vector) {
-    putwchar(L'(');
-    print_Real(vector.components[0], vector.types[0]);
-    for (ushort i=1; i<vector.dim; i++) {
-        wprintf(L", ");
-        print_Real(vector.components[i], vector.types[i]);
+#define BUFF_GROWRATE 1.3f
+wchar_t *vector_to_str(vector_t vector) {
+    wchar_t *string, *real_str;
+    wchar_t **components=calloc(vector.dim, sizeof(wchar_t *));
+    size_t strlen=0, strsize=2*vector.dim+4;
+    
+    ushort i, dim=vector.dim;
+    for (i=0; i<dim; i++) {
+        real_str=_Real_to_str(vector.components[i], vector.types[i]);
+        components[i]=real_str;
+        strsize+=wcslen(real_str);
     }
-    putwchar(L')');
+    
+    string=calloc(strsize, sizeof(wchar_t));
+    real_str=components[0];
+    strlen+=swprintf(string, strsize-strlen, L"(%ls", real_str);
+    free(real_str);
+    
+    for (i=1; i<dim; i++) {
+        real_str=components[i];
+        strlen+=swprintf(string+strlen, strsize-strlen, L", %ls", real_str);
+        free(real_str);
+    }
+    
+    swprintf(string+strlen, strsize-strlen, L")");
+    free(components);
+    return string;
 }
-
+#undef BUFF_GROWRATE
 
 number_t vector_getindex(vector_t vector, ushort index) {
     if (index>=vector.dim)

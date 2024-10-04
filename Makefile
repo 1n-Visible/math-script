@@ -26,6 +26,7 @@ BUILD_FILES=$(patsubst src/%.c,build/%.o,$(SRC_FILES))
 all: $(BUILD_SUBDIRS) $(BIN)
 
 $(BIN): $(BUILD_FILES)
+	mkdir -p bin
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(BUILD_SUBDIRS):

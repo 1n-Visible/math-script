@@ -1,8 +1,8 @@
 #include <stdlib.h>
+//#include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
-/*#include <stdbool.h>
-#include <iso646.h>*/
+#include <wchar.h>
+//#include <iso646.h>
 
 #include "number.h"
 #include "_real.h"
@@ -20,7 +20,8 @@ vector_t new_vector(ushort dim);
 vector_t vector_from_numbers(number_t *numbers, ushort dim);
 void free_vector(vector_t *);
 vector_t copy_vector(vector_t);
-void print_vector(vector_t);
+
+wchar_t *vector_to_str(vector_t vector);
 
 number_t vector_getindex(vector_t, ushort index);
 void vector_setindex(vector_t, ushort index, number_t);
