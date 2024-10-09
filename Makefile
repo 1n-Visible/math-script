@@ -1,4 +1,6 @@
 .PHONY: all clean
+.SILENT:
+
 CC=gcc
 
 WARNINGS=-Wall -Wpedantic -Wno-error \

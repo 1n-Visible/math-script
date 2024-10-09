@@ -95,7 +95,7 @@ RTExpr *Scope_get_var(Scope *scope, const wchar_t *varname) {
     return Scope_get_var(scope->parent, varname);
 }
 
-static RTExpr *eval_Atom(Atom atom) { // frees Atom
+static RTExpr *eval_Atom(Scope *scope, Atom atom) { // frees Atom
     RTExpr *rt_expr;
     RTValue *rt_value;
 
@@ -135,16 +135,12 @@ RTExpr *eval_Expression(Scope *scope, Expression *expr) { // frees Expression
     RTExpr *rt_expr=NULL;
     switch (expr->type) {
         case NT_ATOM:
-            rt_expr=eval_Atom(expr->atom);
+            rt_expr=eval_Atom(scope, expr->atom);
             break;
 
         case NT_UNARY_PREFIX:
-            rt_expr=alloc_RTExpr(RT_UNARY_PREFIX);
-            rt_expr->oper=expr->oper;
-            rt_expr->value=eval_Expression(scope, expr->value);
-            break;
         case NT_UNARY_POSTFIX:
-            rt_expr=alloc_RTExpr(RT_UNARY_POSTFIX);
+            rt_expr=alloc_RTExpr(RT_UNARY);
             rt_expr->oper=expr->oper;
             rt_expr->value=eval_Expression(scope, expr->value);
             break;
@@ -161,7 +157,7 @@ RTExpr *eval_Expression(Scope *scope, Expression *expr) { // frees Expression
         case NT_SUM:
         case NT_PROD:
         case NT_INT:
-            break;
+            return NULL;
     }
 
     free(expr);

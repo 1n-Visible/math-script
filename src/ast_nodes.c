@@ -114,6 +114,10 @@ void free_Expression(Expression *expr) {
         case NT_ATOM:
             free_Atom(&expr->atom);
             break;
+        case NT_UNARY_PREFIX:
+        case NT_UNARY_POSTFIX:
+            free_Expression(expr->value);
+            break;
         case NT_BINOP:
         case NT_RANGE:
             free_Expression(expr->left);
@@ -124,9 +128,11 @@ void free_Expression(Expression *expr) {
                 free_Expression(expr->values[i]);
             free(expr->operators);
             break;
-        case NT_UNARY_PREFIX:
-        case NT_UNARY_POSTFIX:
-            free_Expression(expr->value);
+        case NT_SUM:
+        case NT_PROD:
+        case NT_INT:
+            free(expr->value);
+            return; //TODO
     }
 
     free(expr);
@@ -135,27 +141,25 @@ void free_Expression(Expression *expr) {
 void print_expr_long(Expression *expr) {
     wprintf(L"Expression(");
     ushort param=expr->parameter;
+
     switch (expr->type) {
         case NT_ATOM:
             print_Atom(expr->atom);
             break;
-        case NT_RANGE:
-            wprintf(L"rangetype=%hu, left=", param);
-            print_expr_long(expr->left);
-            wprintf(L", right=");
-            print_expr_long(expr->right);
-            break;
+
         case NT_UNARY_PREFIX:
         case NT_UNARY_POSTFIX:
             wprintf(L"oper=%s, value=", OperType_string[expr->oper]);
             print_expr_long(expr->value);
             break;
+
         case NT_BINOP:
             wprintf(L"left=");
             print_expr_long(expr->left);
             wprintf(L", oper=%s, right=", OperType_string[expr->oper]);
             print_expr_long(expr->right);
             break;
+
         case NT_COMP:
             for (ushort i=0; i<param; i++) {
                 print_expr_long(expr->values[i]);
@@ -163,16 +167,73 @@ void print_expr_long(Expression *expr) {
             }
             print_expr_long(expr->values[param]);
             break;
+
+        case NT_RANGE:
+            wprintf(L"rangetype=%hu, left=", param);
+            print_expr_long(expr->left);
+            wprintf(L", right=");
+            print_expr_long(expr->right);
+            break;
+
+        case NT_SUM:
+        case NT_PROD: //TODO: implement
+            wprintf(L"oper=%s, var=%ls, from=",
+                    (expr->type==NT_SUM)? "SUM": "PROD", NULL);
+            print_expr_long(expr->left);
+            wprintf(L", to=");
+            print_expr_long(expr->right);
+            wprintf(L", expr=");
+            print_expr_long(expr->value);
+            break;
+
+        case NT_INT:
+            wprintf(L"oper=INT, var=%ls, range=", NULL);
+            print_expr(NULL);
+            wprintf(L", expr=");
+            print_expr_long(expr->value);
+            break;
     }
+
     putwchar(L')');
 }
 
 void print_expr(Expression *expr) {
     ushort param=expr->parameter;
+    const char *operstr = (
+        (expr->oper<COMP_SUPERSET)? operators_string[expr->oper]: NULL
+    );
+
     switch (expr->type) {
         case NT_ATOM:
             print_Atom(expr->atom);
             return;
+
+        case NT_UNARY_PREFIX:
+            wprintf(L"%s(", operstr);
+            print_expr(expr->value);
+            break;
+        case NT_UNARY_POSTFIX:
+            putwchar(L'(');
+            print_expr(expr->value);
+            wprintf(L")%s", operstr);
+            return;
+
+        case NT_BINOP:
+            putwchar(L'(');
+            print_expr(expr->left);
+            wprintf(L" %s ", operstr);
+            print_expr(expr->right);
+            break;
+
+        case NT_COMP:
+            putwchar(L'(');
+            for (ushort i=0; i<param; i++) {
+                print_expr(expr->values[i]);
+                wprintf(L" %s ", operators_string[expr->operators[i]]);
+            }
+            print_expr(expr->values[param]);
+            break;
+
         case NT_RANGE:
             putwchar((param&RANGE_START)? L'[': L'(');
             print_expr(expr->left);
@@ -180,26 +241,26 @@ void print_expr(Expression *expr) {
             print_expr(expr->right);
             putwchar((param&RANGE_STOP)? L']': L')');
             return;
-        case NT_UNARY_PREFIX:
-        case NT_UNARY_POSTFIX:
-            wprintf(L"(%s ", OperType_string[expr->oper]);
-            print_expr(expr->value);
-            break;
-        case NT_BINOP:
-            wprintf(L"(");
+
+        case NT_SUM:
+        case NT_PROD: //TODO: implement
+            wprintf(L"%lc [%ls=", L"ΣΠ"[expr->type!=NT_SUM], NULL);
             print_expr(expr->left);
-            wprintf(L" %s ", OperType_string[expr->oper]);
+            wprintf(L"; ");
             print_expr(expr->right);
-            break;
-        case NT_COMP:
-            putwchar(L'(');
-            for (ushort i=0; i<param; i++) {
-                print_expr(expr->values[i]);
-                wprintf(L" %s ", OperType_string[expr->operators[i]]);
-            }
-            print_expr(expr->values[param]);
-            break;
+            wprintf(L"] ");
+            print_expr(expr->value);
+            return;
+
+        case NT_INT: //TODO
+            wprintf(L"∫ ");
+            print_expr(NULL);
+            putwchar(L' ');
+            print_expr(expr->value);
+            wprintf(L" ∂%ls", NULL);
+            return;
     }
+
     putwchar(L')');
 }
 

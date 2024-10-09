@@ -23,9 +23,9 @@ enum rt_value_t {
     RT_FUNCTION, RT_USERTYPE
 };
 
-enum rt_expr_t { //TODO: add sum, prod...
-    RT_VALUE, RT_VAR, RT_UNARY_PREFIX, RT_UNARY_POSTFIX,
-    RT_BINOP, RT_CALL
+enum rt_expr_t {
+    RT_VALUE, RT_VAR, RT_UNARY, RT_BINOP, RT_CALL,
+    RT_SUM, RT_PROD, RT_INT
 };
 
 typedef struct RTValue RTValue;

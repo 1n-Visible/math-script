@@ -119,8 +119,7 @@ void free_RTExpr(RTExpr *rt_expr) {
             free_RTValue(rt_expr->rt_value); break;
         case RT_VAR:
             free(rt_expr->varname); break;
-        case RT_UNARY_PREFIX:
-        case RT_UNARY_POSTFIX:
+        case RT_UNARY:
             free_RTExpr(rt_expr->value); break;
         case RT_BINOP:
             free_RTExpr(rt_expr->left);
@@ -138,20 +137,23 @@ RTExpr *eval_RTExpr(RTExpr *rt_expr) { //TODO
 }
 
 void print_RTExpr(RTExpr *rt_expr) {
-    const char *operstr=operators_string[rt_expr->oper];
+    OperType oper = rt_expr->oper;
+    const char *operstr = (oper<COMP_SUPERSET)? operators_string[oper]: NULL;
+    bool is_postfix = (oper<=UNARY_FACTORIAL);
 
     switch (rt_expr->type) {
         case RT_VALUE:
             print_RTValue(rt_expr->rt_value); break;
         case RT_VAR:
             wprintf(rt_expr->varname); break;
-        case RT_UNARY_PREFIX:
-            wprintf(L"%s", operstr);
+        case RT_UNARY:
+            if (is_postfix) wprintf(L"(");
+            else wprintf(L"%s(", operstr);
+
             print_RTExpr(rt_expr->value);
-            break;
-        case RT_UNARY_POSTFIX:
-            print_RTExpr(rt_expr->value);
-            wprintf(L"%s", operstr);
+
+            if (is_postfix) wprintf(L")%s", operstr);
+            else wprintf(L")");
             break;
         case RT_BINOP:
             print_RTExpr(rt_expr->left);

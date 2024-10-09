@@ -48,6 +48,8 @@ typedef enum OperType {
 extern const char *operators_string[];
 extern const char *OperType_string[];
 
+typedef struct Expression Expression;
+
 /* === EXPRESSIONS === */
 enum ExpressionType {
     NT_ATOM, NT_UNARY_PREFIX, NT_UNARY_POSTFIX,
@@ -55,15 +57,15 @@ enum ExpressionType {
     NT_RANGE, NT_SUM, NT_PROD, NT_INT
 };
 
-typedef struct Expression {
+struct Expression {
     enum ExpressionType type;
     OperType oper;      // unary/binary operator type
     ushort parameter;    // chain length | range type
     Atom atom;
 
     OperType *operators;// ==, !=, <=, >= ...chains
-    struct Expression *value, *left, *right, **values;
-} Expression;
+    Expression *value, *left, *right, **values;
+};
 
 Expression *new_Expression(enum ExpressionType type);
 void free_Expression(Expression *expr);
