@@ -10,7 +10,7 @@ WARNINGS=-Wall -Wpedantic -Wno-error \
 -Woverflow -Wpacked -Wreturn-local-addr -Wsuggest-attribute=const \
 -Wno-switch -Wno-unused-variable -Wno-discarded-qualifiers
 DEBUG=
-OPTIONS=-O0 -fshort-enums -finline-small-functions
+OPTIONS=-O0 -fshort-enums -finline-small-functions -fmax-include-depth=10
 LINKS=-Iinclude -lm #link math.h
 CFLAGS=$(DEBUG) $(WARNINGS) $(OPTIONS) $(LINKS)
 

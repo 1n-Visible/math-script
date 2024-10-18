@@ -132,10 +132,6 @@ void free_RTExpr(RTExpr *rt_expr) {
     free(rt_expr);
 }
 
-RTExpr *eval_RTExpr(RTExpr *rt_expr) { //TODO
-    return NULL;
-}
-
 void print_RTExpr(RTExpr *rt_expr) {
     OperType oper = rt_expr->oper;
     const char *operstr = (oper<COMP_SUPERSET)? operators_string[oper]: NULL;
@@ -163,4 +159,27 @@ void print_RTExpr(RTExpr *rt_expr) {
         case RT_CALL: //TODO
             return;
     }
+}
+
+RTExpr *eval_RTExpr(Scope *scope, RTExpr *rt_expr) {
+    RTExpr *rt_expr2;
+    switch (rt_expr->type) {
+        case RT_VALUE:
+            rt_expr->is_defined=true;
+            return rt_expr;
+
+        case RT_VAR:
+            rt_expr2=Scope_get_var(scope, rt_expr->varname);
+            if (rt_expr2==NULL) {
+                rt_expr->is_defined=false;
+                return rt_expr;
+            }
+
+            return eval_RTExpr(scope, rt_expr2);
+
+        case RT_UNARY:
+            break; //TODO
+    }
+
+    return NULL;
 }

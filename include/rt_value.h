@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "ast_nodes.h"
+#include "scope.h"
 #include "rt_values/number.h"
 #include "rt_values/vector.h"/*
 #include "rt_values/array.h"
@@ -79,7 +80,7 @@ RT_VALUE_OPER(pow)
 
 extern RTExpr *alloc_RTExpr(enum rt_expr_t type);
 void free_RTExpr(RTExpr *);
-RTExpr *eval_RTExpr(RTExpr *);
 void print_RTExpr(RTExpr *);
+RTExpr *eval_RTExpr(Scope *, RTExpr *);
 
 #endif
