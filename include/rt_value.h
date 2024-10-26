@@ -32,7 +32,7 @@ enum rt_expr_t {
 typedef struct RTValue RTValue;
 typedef struct RTExpr RTExpr;
 
-struct RTValue {
+struct RTValue { //TODO: separate error into own struct with line & col
     enum rt_value_t type;
     union {
         wchar_t *errormsg;
@@ -59,6 +59,7 @@ void free_RTValue(RTValue *);
 RTValue *copy_RTValue(RTValue *);
 void print_RTValue(RTValue *);
 
+RTValue *RTValue_binop(OperType, RTValue *, RTValue *);
 
 #define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *value)
 

@@ -29,13 +29,19 @@ int lex_shell(FILE *file) {
 int exec_shell(FILE *file) {
     Parser *parser=new_Parser(file);
     ASTNode node;
+    RTExpr *rt_expr;
+
     while (true) {
         wprintf(L"\n\nms> ");
         node=parse_line(parser);
         if (node.type==NT_EOF)
             break;
+
         print_ASTNode(node);
-        free_ASTNode(&node);
+        rt_expr=eval_ASTNode(node);
+        
+        wprintf(L"\n! ");
+        print_RTExpr(rt_expr);
     }
     putwchar(L'\n');
 

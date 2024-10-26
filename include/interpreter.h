@@ -14,6 +14,6 @@ RTExpr *alloc_RTExpr(enum rt_expr_t type);
 void collect_RTExpr(RTExpr *);
 size_t garbage_collect(ushort level);
 
-RTExpr *eval_Expression(Scope *scope, Expression *expr);
+RTExpr *eval_ASTNode(ASTNode node); // frees ASTNode
 
 #endif

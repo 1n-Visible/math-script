@@ -63,6 +63,31 @@ void print_RTValue(RTValue *rt_value) {
     }
 }
 
+RTValue *RTValue_binop(OperType oper, RTValue *value1, RTValue *value2) {
+    if (value1->type==RT_ERROR) return copy_RTValue(value1);
+    if (value2->type==RT_ERROR) return copy_RTValue(value2);
+
+    RTValue *value;
+    switch (oper) {
+        case BINOP_ADD:
+        case BINOP_SUB:
+            value=new_RTValue(RT_NUMBER);
+            value->number=((oper==BINOP_ADD)? number_add: number_sub)(value1->number, value2->number);
+            return value;
+        case BINOP_MUL:
+        case BINOP_TRUEDIV:
+            value=new_RTValue(RT_NUMBER);
+            value->number=((oper==BINOP_MUL)? number_mul: number_truediv)(value1->number, value2->number);
+            return value;
+        case BINOP_DIV:
+        case BINOP_MOD:
+            value=new_RTValue(RT_NUMBER);
+            value->number=((oper==BINOP_DIV)? number_div: number_mod)(value1->number, value2->number);
+            return value;
+    }
+
+    return NULL;
+}
 
 #define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *value)
 
@@ -152,9 +177,11 @@ void print_RTExpr(RTExpr *rt_expr) {
             else wprintf(L")");
             break;
         case RT_BINOP:
+            putwchar(L'(');
             print_RTExpr(rt_expr->left);
             wprintf(L" %s ", operstr);
             print_RTExpr(rt_expr->right);
+            putwchar(L')');
             break;
         case RT_CALL: //TODO
             return;
@@ -162,23 +189,52 @@ void print_RTExpr(RTExpr *rt_expr) {
 }
 
 RTExpr *eval_RTExpr(Scope *scope, RTExpr *rt_expr) {
-    RTExpr *rt_expr2;
+    RTExpr *return_rt_expr, *rt_expr_left, *rt_expr_right;
+    RTValue *rt_value;
+
     switch (rt_expr->type) {
         case RT_VALUE:
-            rt_expr->is_defined=true;
             return rt_expr;
 
         case RT_VAR:
-            rt_expr2=Scope_get_var(scope, rt_expr->varname);
-            if (rt_expr2==NULL) {
-                rt_expr->is_defined=false;
+            return_rt_expr=Scope_get_var(scope, rt_expr->varname);
+            if (return_rt_expr==NULL)
                 return rt_expr;
-            }
 
-            return eval_RTExpr(scope, rt_expr2);
+            return eval_RTExpr(scope, return_rt_expr);
 
         case RT_UNARY:
-            break; //TODO
+            return_rt_expr=eval_RTExpr(scope, rt_expr->value);
+            if (return_rt_expr->type!=RT_VALUE)
+                return rt_expr;
+
+            rt_value=NULL; //TODO: evaluate function
+            return_rt_expr=alloc_RTExpr(RT_VALUE);
+            return_rt_expr->rt_value=rt_value;
+            return return_rt_expr;
+
+        case RT_BINOP:
+            rt_expr_left=eval_RTExpr(scope, rt_expr->left);
+            if (rt_expr_left->type!=RT_VALUE)
+                return rt_expr;
+
+            rt_expr_right=eval_RTExpr(scope, rt_expr->right);
+            if (rt_expr_right->type!=RT_VALUE)
+                return rt_expr;
+
+            rt_value=RTValue_binop(rt_expr->oper, rt_expr_left->rt_value,
+                                                  rt_expr_right->rt_value);
+            return_rt_expr=alloc_RTExpr(RT_VALUE);
+            return_rt_expr->rt_value=rt_value;
+            return return_rt_expr;
+
+        case RT_CALL: //TODO
+        case RT_SUM:
+        case RT_PROD:
+            return_rt_expr=eval_RTExpr(scope, rt_expr->value);
+
+        case RT_INT:
+            return NULL;
     }
 
     return NULL;

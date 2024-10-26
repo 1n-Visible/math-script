@@ -40,6 +40,9 @@ RTExpr *alloc_RTExpr(enum rt_expr_t type) {
 }
 
 void collect_RTExpr(RTExpr *rt_expr) {
+    if (rt_expr==NULL)
+        return;
+
     for (size_t i=0; i<register_len; i++) {
         if (global_value_register[i]==rt_expr) {
             global_value_register[i]=global_value_register[--register_len];
@@ -48,7 +51,7 @@ void collect_RTExpr(RTExpr *rt_expr) {
         }
     }
 
-    perror("collect_RTValue() rt_expr not in global_value_register");
+    perror("collect_RTExpr() rt_expr not in global_value_register");
     free_RTExpr(rt_expr);
 }
 
@@ -57,7 +60,7 @@ size_t garbage_collect(ushort level) { //TODO:
 }
 
 
-static RTExpr *eval_Atom(Scope *scope, Atom atom) { // frees Atom
+static RTExpr *eval_Atom(Atom atom) { // frees Atom
     RTExpr *rt_expr;
     RTValue *rt_value;
 
@@ -90,28 +93,28 @@ static RTExpr *eval_Atom(Scope *scope, Atom atom) { // frees Atom
     return rt_expr;
 }
 
-RTExpr *eval_Expression(Scope *scope, Expression *expr) { // frees Expression
+static RTExpr *eval_Expression(Expression *expr) { // frees Expression
     if (expr==NULL)
         return NULL;
 
     RTExpr *rt_expr=NULL;
     switch (expr->type) {
         case NT_ATOM:
-            rt_expr=eval_Atom(scope, expr->atom);
+            rt_expr=eval_Atom(expr->atom);
             break;
 
         case NT_UNARY_PREFIX:
         case NT_UNARY_POSTFIX:
             rt_expr=alloc_RTExpr(RT_UNARY);
             rt_expr->oper=expr->oper;
-            rt_expr->value=eval_Expression(scope, expr->value);
+            rt_expr->value=eval_Expression(expr->value);
             break;
 
         case NT_BINOP:
             rt_expr=alloc_RTExpr(RT_BINOP);
             rt_expr->oper=expr->oper;
-            rt_expr->left=eval_Expression(scope, expr->left);
-            rt_expr->right=eval_Expression(scope, expr->right);
+            rt_expr->left=eval_Expression(expr->left);
+            rt_expr->right=eval_Expression(expr->right);
             break;
         case NT_COMP:
             // TODO: Evaluate == != < > <=...
@@ -124,4 +127,27 @@ RTExpr *eval_Expression(Scope *scope, Expression *expr) { // frees Expression
 
     free(expr);
     return rt_expr;
+}
+
+RTExpr *eval_ASTNode(ASTNode node) { // frees ASTNode
+    RTExpr *rt_expr;
+    RTValue *rt_value;
+
+    switch (node.type) {
+        case NT_EOF:
+        case NT_EMPTY:
+            return NULL;
+        case NT_ERROR:
+            rt_value=new_RTValue(RT_ERROR);
+            rt_value->errormsg=node.error_code;
+            rt_expr=alloc_RTExpr(RT_VALUE);
+            rt_expr->rt_value=rt_value;
+            return rt_expr;
+        case NT_EXPR:
+            return eval_Expression(node.expr);
+        case NT_COMMAND: // implement
+            return NULL;
+    }
+
+    return NULL;
 }
