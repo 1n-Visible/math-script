@@ -144,20 +144,15 @@ void free_RTExpr(RTExpr *rt_expr) {
             free_RTValue(rt_expr->rt_value); break;
         case RT_VAR:
             free(rt_expr->varname); break;
-        case RT_UNARY:
-            free_RTExpr(rt_expr->value); break;
-        case RT_BINOP:
-            free_RTExpr(rt_expr->left);
-            free_RTExpr(rt_expr->right);
-            break;
-        case RT_CALL: //TODO
-            return;
     }
 
     free(rt_expr);
 }
 
 void print_RTExpr(RTExpr *rt_expr) {
+    if (rt_expr==NULL)
+        return;
+
     OperType oper = rt_expr->oper;
     const char *operstr = (oper<COMP_SUPERSET)? operators_string[oper]: NULL;
     bool is_postfix = (oper<=UNARY_FACTORIAL);
