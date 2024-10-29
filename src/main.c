@@ -39,7 +39,12 @@ int exec_shell(FILE *file) {
 
         print_ASTNode(node);
         rt_expr=eval_ASTNode(node);
-        
+        putwchar(L'\n');
+        print_RTExpr(rt_expr);
+        if (rt_expr==NULL)
+            continue;
+
+        rt_expr=eval_RTExpr(NULL, rt_expr);
         wprintf(L"\n! ");
         print_RTExpr(rt_expr);
     }

@@ -63,6 +63,44 @@ void print_RTValue(RTValue *rt_value) {
     }
 }
 
+RTValue *RTValue_unary(OperType oper, RTValue *value) {
+    if (value->type==RT_ERROR) return copy_RTValue(value);
+
+    RTValue *ret_value;
+    switch (oper) {
+        case UNARY_LENGTH: //TODO
+            return NULL;
+        case UNARY_ABS:
+            ret_value=new_RTValue(RT_NUMBER);
+            ret_value->number=number_abs(value->number);
+            return ret_value;
+        case UNARY_SQR:
+            ret_value=new_RTValue(RT_NUMBER);
+            ret_value->number=number_sqr(value->number);
+            return ret_value;
+        case UNARY_CUBE:
+            ret_value=new_RTValue(RT_NUMBER);
+            ret_value->number=number_cube(value->number);
+            return ret_value;
+        case UNARY_FACTORIAL:
+            return NULL;
+        case UNARY_SQRT:
+            ret_value=new_RTValue(RT_NUMBER);
+            ret_value->number=number_sqrt(value->number);
+            return ret_value;
+        case UNARY_POS:
+            return copy_RTValue(value);
+        case UNARY_NEG:
+            ret_value=new_RTValue(RT_NUMBER);
+            ret_value->number=number_neg(value->number);
+            return ret_value;
+        case UNARY_PM:
+            return NULL;
+    }
+
+    return NULL;
+}
+
 RTValue *RTValue_binop(OperType oper, RTValue *value1, RTValue *value2) {
     if (value1->type==RT_ERROR) return copy_RTValue(value1);
     if (value2->type==RT_ERROR) return copy_RTValue(value2);
@@ -203,7 +241,7 @@ RTExpr *eval_RTExpr(Scope *scope, RTExpr *rt_expr) {
             if (return_rt_expr->type!=RT_VALUE)
                 return rt_expr;
 
-            rt_value=NULL; //TODO: evaluate function
+            rt_value=RTValue_unary(rt_expr->oper, return_rt_expr->rt_value);
             return_rt_expr=alloc_RTExpr(RT_VALUE);
             return_rt_expr->rt_value=rt_value;
             return return_rt_expr;

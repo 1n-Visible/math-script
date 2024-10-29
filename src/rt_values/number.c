@@ -185,8 +185,9 @@ static union _Real number_optabs(number_t num, enum num_type *ret_type) {
 }
 
 static double number_abs_dbl(number_t num) {
-    enum num_type type = NUMT_FLOAT;
-    return _Real_to_double(number_optabs(num, &type), type);
+    enum num_type type;
+    union _Real real=number_optabs(num, &type);
+    return _Real_to_double(real, type);
 }
 
 NUMBER_UNARY(abs_sqr) {
