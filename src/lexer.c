@@ -5,7 +5,7 @@ const char *TokenType_string[] = {
     "EQ", "NE", "AEQ", "NAE", "REQ", "NRE",
     "LT", "GT", "LE", "GE",
     "PLUS", "MINUS", "MUL", "TRUEDIV",
-    "DIV", "MOD", "POW", "MATMUL_AT",
+    "DIV", "MOD", "POW", "MATMUL",
     "OR", "AND", "XOR",
     "IADD", "ISUB", "IMUL", "ITRUEDIV",
     "IDIV", "IMOD", "IPOW", "IMATMUL",
@@ -18,16 +18,15 @@ const char *TokenType_string[] = {
     "SET", "ARROW", "EXCL", "ABS_BRACKET",
     "LENGTH", "DOLLAR", "FUNC_DERIV", "TERNARY",
     "KW_SUM", "KW_PROD", "KW_INT", "DERIVATIVE",
+    "KW_NONE", "KW_TRUE", "KW_FALSE", "KW_NAN", "KW_INF",
     "KW_NOT", "KW_OR", "KW_AND",
     "KW_IS", "KW_IN", "KW_NOT_IN", "SUBSET", "SUPERSET",
     "KW_IF", "KW_ELSE", "KW_SWITCH", "KW_CASE",
     "KW_LOOP", "KW_FOR", "KW_CONTINUE", "KW_BREAK",
     "KW_FUNC", "KW_RETURN",
     "INDENT", "NEWLINE",
-    "IDENTIFIER",
-    "STRING", "FSTRING",
     "REAL_INT", "REAL_FLOAT", "IMAG_INT", "IMAG_FLOAT",
-    "KW_NONE", "KW_TRUE", "KW_FALSE", "KW_NAN", "KW_INF", "LCHAR"
+    "IDENTIFIER", "LCHAR", "STRING", "FSTRING"
 };
 
 //TODO: remove \$
@@ -50,21 +49,16 @@ static const TokenType single_tokens[SINGLE_TOKEN_SIZE] = {
     [L'≤']=LE, [L'≥']=GE, [L'⊂']=SUBSET, [L'⊃']=SUPERSET
 };
 
-#define DOUBLE_SIZE 128
-static const TokenType double_tokens[DOUBLE_SIZE][2] = {
-    ['%']={MOD, IMOD}, ['@']={MATMUL_AT, IMATMUL},
-    ['&']={AND, IAND}, ['^']={XOR, IXOR},
-    ['=']={SET, EQ}, ['~']={AEQ, REQ}, ['<']={LT, LE}, ['>']={GT, GE}
-};
-
 const wchar_t imagchar=L'i';
 const TokenType number_types[4] = {IMAG_INT, IMAG_FLOAT, REAL_INT, REAL_FLOAT};
 
 static DictTree *keyword_tokens = NULL;
+static HashMap *symbol_tokens = NULL;
 
 #define P(str, tt) set_word(keyword_tokens, str, (const void *)tt)
+#define Q(str, tt) HashMap_set(symbol_tokens, str, (const void *)tt)
 
-__attribute__((constructor)) void setup_keywords() {
+__attribute__((constructor)) void setup_token_luts() {
     keyword_tokens=new_DictTree(); {
         P(L"None", KW_NONE), P(L"true", KW_TRUE), P(L"false", KW_FALSE),
         P(L"NaN", KW_NAN), P(L"Inf", KW_INF), P(L"sqrt", SQRT),
@@ -79,13 +73,37 @@ __attribute__((constructor)) void setup_keywords() {
         P(L"continue", KW_CONTINUE), P(L"break", KW_BREAK),
         P(L"func", KW_FUNC), P(L"return", KW_RETURN);
     };
+
+    symbol_tokens=new_HashMap(10, stdcomp_wstring, stdhash_wstring); {
+        Q(L"==", EQ), Q(L"!=", NE), Q(L"≠", NE), Q(L"~", AEQ), Q(L"!~", NAE),
+        Q(L"~=", REQ), Q(L"≈", REQ), Q(L"!~=", NRE), Q(L"!≈", NRE),
+        Q(L"<", LT), Q(L"<=", LE), Q(L"≤", LE),
+        Q(L">", GT), Q(L">=", GE), Q(L"≥", GE),
+        Q(L"+", PLUS), Q(L"-", MINUS), Q(L"*", MUL), Q(L"/", TRUEDIV),
+        Q(L"//", DIV), Q(L"%", MOD), Q(L"**", POW), Q(L"@", MATMUL),
+        Q(L"!", EXCL), Q(L"||", OR), Q(L"&", AND), Q(L"^", XOR),
+        Q(L"+=", IADD), Q(L"-=", ISUB), Q(L"*=", IMUL), Q(L"/=", ITRUEDIV),
+        Q(L"//=", IDIV), Q(L"%=", IMOD), Q(L"**=", IPOW), Q(L"@=", IMATMUL),
+        Q(L"||=", IOR), Q(L"&=", IAND), Q(L"^=", IXOR),
+        Q(L"+-", PM), Q(L"±", PM), Q(L"²", SQR), Q(L"³", CUBE), Q(L"√", SQRT),
+        Q(L"(", PAREN_L), Q(L")", PAREN_R),
+        Q(L"[", SBRACK_L), Q(L"]", SBRACK_R),
+        Q(L"{", CBRACK_L), Q(L"}", CBRACK_R),
+        Q(L".", DOT), Q(L",", COMMA), Q(L":", COLON), Q(L";", SEMICOLON),
+        Q(L"=", SET), Q(L"?", TERNARY), Q(L"->", ARROW), Q(L"|", ABS_BRACKET),
+        Q(L"#", LENGTH), Q(L"'", FUNC_DERIV), Q(L"∂", DERIVATIVE),
+        Q(L"∈", KW_IN), Q(L"!∈", KW_NOT_IN), Q(L"∉", KW_NOT_IN),
+        Q(L"⊂", SUBSET), Q(L"⊃", SUPERSET);
+    };
 }
 
-__attribute__((destructor)) void teardown_keywords() {
+__attribute__((destructor)) void teardown_token_luts() {
     free_DictTree(keyword_tokens);
+    free_HashMap(symbol_tokens);
 }
 
 #undef P
+#undef Q
 
 
 void free_Token(Token *token) {
@@ -123,11 +141,11 @@ void print_error(Token token) {
 Lexer *new_Lexer(FILE *file) {
     Lexer *lexer = malloc(sizeof(Lexer));
     lexer->file=file;
-    lexer->buffsize=0;
     lexer->pos=0;
-    
+    lexer->buffsize=0;
+
     lexer->line=1;
-    lexer->col=0;
+    lexer->col=1;
     return lexer;
 }
 
@@ -138,45 +156,58 @@ void free_Lexer(Lexer *lexer) {
     free(lexer);
 }
 
-Token make_Token(Lexer *lexer, TokenType type, const wchar_t *value) {
-    Token token = (Token){type, .value=NULL};
-    size_t value_size = 0;
-    if (type==INDENT)
-        value_size=(ushort)value;
-    else if (value!=NULL)
-        token.value=string_copy_len(value, &value_size);
-    
-    token.value_size=value_size;
-    token.line=lexer->line;
-    token.col=lexer->col+lexer->pos;
-    return token;
-}
-
-static bool next_line(Lexer *lexer) {
+static bool next_chunk(Lexer *lexer) {
     wchar_t *buffer=lexer->buffer;
-    size_t buffsize=lexer->buffsize;
-    
-    lexer->col+=buffsize; lexer->pos=0;
-    if (buffsize>=1 && buffer[buffsize-1]==L'\n') {
-        lexer->line++; //TODO: test if buffer always ends in \n.
+    ushort buffsize=lexer->buffsize;
+
+    if (buffsize==0) {
+        if (fgetws(buffer, LEXER_BUFFSIZE, lexer->file)==NULL)
+            return false;
+
+        lexer->buffsize=wcsnlen(buffer, LEXER_BUFFSIZE);
+        lexer->pos=0;
+        return true;
+    }
+
+    lexer->col+=buffsize-1;
+    lexer->pos=1;
+    buffer[0]=buffer[buffsize-1];
+    if (buffer[0]==L'\n') {
+        lexer->line++;
         lexer->col=0;
     }
-    
-    if (fgetws(buffer, LEXER_BUFFSIZE, lexer->file)==NULL) {
-        lexer->buffsize=0;
+
+    if (fgetws(buffer+1, LEXER_BUFFSIZE-1, lexer->file)==NULL) {
+        lexer->buffsize=1;
         return false;
     }
-    buffsize=wcsnlen(buffer, LEXER_BUFFSIZE);
-    lexer->buffsize=buffsize;
+
+    lexer->buffsize=wcsnlen(buffer+1, LEXER_BUFFSIZE-1)+1;
     return true;
 }
 
 static wchar_t curr_char(Lexer *lexer) {
+    if (lexer->pos<0) {
+        perror("Cannot get current char");
+        return L'\0';
+    }
+
     return lexer->buffer[lexer->pos];
 }
 
 static wchar_t next_char(Lexer *lexer) {
-    if (++lexer->pos >= lexer->buffsize && !next_line(lexer))
+    short pos=lexer->pos+1;
+    if (pos<0) {
+        perror("Cannot get next char: pos < -1");
+        return L'\0';
+    }
+
+    if (pos<lexer->buffsize) {
+        lexer->pos=pos;
+        return lexer->buffer[pos];
+    }
+
+    if (!next_chunk(lexer))
         return L'\0';
     return lexer->buffer[lexer->pos];
 }
@@ -190,31 +221,41 @@ static void prev_char(Lexer *lexer) {
 }
 
 
-static Token handle_excl(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'=': return make_Token(lexer, NE, NULL);
-        case L'≈': return make_Token(lexer, NRE, NULL);
-        case L'~':
-            if (next_char(lexer)==L'=')
-                return make_Token(lexer, NRE, NULL);
-            prev_char(lexer);
-            return make_Token(lexer, NAE, NULL);
-        case L'∈': return make_Token(lexer, KW_NOT_IN, NULL);
-    }
+Token make_Token(TokenType type, const wchar_t *value) {
+    Token token = (Token){type, .value=NULL};
+    size_t value_size = 0;
+    if (type==INDENT)
+        value_size=(size_t)value;
+    else if (value!=NULL)
+        token.value=string_copy_len(value, &value_size);
 
-    prev_char(lexer);
-    return make_Token(lexer, EXCL, NULL);
+    token.value_size=value_size;
+    return token;
 }
 
+Token make_Token_error(Lexer *lexer, const wchar_t *value) {
+    Token token = (Token){TT_ERROR, .value=NULL};
+    size_t value_size = 0;
+    if (value!=NULL)
+        token.value=string_copy_len(value, &value_size);
+
+    token.value_size=value_size;
+    token.line=lexer->line;
+    token.col=lexer->col+lexer->pos;
+    return token;
+}
+
+#define MAKE_TOKEN(toktype, val) make_Token(toktype, val)
+
 static Token handle_string(Lexer *lexer) {
-    size_t i, buffsize=32;
+    ushort i, buffsize=32;
     wchar_t *buffer=calloc(buffsize, sizeof(wchar_t));
 
     wchar_t c=next_char(lexer);
     for (i=0; c!=L'"'; c=next_char(lexer)) {
         if (c==L'\0') {
             free(buffer);
-            return make_Token(lexer, TT_ERROR, L"Unexpected EOF");
+            return make_Token_error(lexer, L"Unexpected EOF");
         } //TODO: handle backslash
         
         if (i>=(buffsize-1)) {
@@ -225,143 +266,77 @@ static Token handle_string(Lexer *lexer) {
     }
 
     buffer[i++]=L'\0';
-    return make_Token(lexer, STRING, buffer);
+    return (Token){STRING, .value=buffer, .value_size=i};
 }
 
 static Token handle_dollar(Lexer *lexer) {
     Token token;
-    wchar_t c, c0=next_char(lexer);
-    switch (c0) {
+    wchar_t c, str[2];
+
+    c=next_char(lexer);
+    switch (c) {
         case L'"':
             token=handle_string(lexer); //TODO: fstring parsing
             if (token.type!=TT_ERROR)
                 token.type=FSTRING;
             return token;
         case L'\'':
-            c0=next_char(lexer);
-            if (c0==L'\\') { //TODO: handle hex
-                c0=next_char(lexer);
-                c=(c0<ESCAPE_CODES_SIZE)? escape_codes[c0]: L'\0';
+            c=next_char(lexer);
+            if (c==L'\\') { //TODO: handle hex
+                c=next_char(lexer);
+                c=(c<ESCAPE_CODES_SIZE)? escape_codes[c]: L'\0';
                 if (c==L'\0')
-                    return make_Token(lexer, TT_ERROR, L"Unknown escape sequence");
+                    return make_Token_error(lexer, L"Unknown escape sequence");
             } else if (c==L'\'')
-                return make_Token(lexer, TT_ERROR, L"Empty character literal");
-            else
-                c=c0;
+                return make_Token_error(lexer, L"Empty character literal");
 
             if (next_char(lexer)!=L'\'')
-                return make_Token(lexer, TT_ERROR, L"Unclosed character literal");
+                return make_Token_error(lexer, L"Unclosed character literal");
             
-            c0=L'\0';
-            return make_Token(lexer, LCHAR, &c);
+            str[0]=c; str[1]=L'\0';
+            return MAKE_TOKEN(LCHAR, str);
     }
 
     prev_char(lexer);
-    return make_Token(lexer, DOLLAR, NULL);
+    return MAKE_TOKEN(DOLLAR, NULL);
 }
 
-static Token handle_star(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'*':
-            if (next_char(lexer)==L'=')
-                return make_Token(lexer, IPOW, NULL);
+static Token skip_comment(Lexer *lexer) {
+    do {
+        if (!next_chunk(lexer))
+            return MAKE_TOKEN(TT_EOF, NULL);
+    } while (lexer->buffer[0]!='\n');
 
-            prev_char(lexer);
-            return make_Token(lexer, POW, NULL);
-        case L'=':
-            return make_Token(lexer, IMUL, NULL);
-    }
-
-    prev_char(lexer);
-    return make_Token(lexer, MUL, NULL);
+    return MAKE_TOKEN(NEWLINE, NULL);
 }
 
-static Token handle_plus(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'=': return make_Token(lexer, IADD, NULL);
-        case L'-': return make_Token(lexer, PM, NULL);
-    }
-
-    prev_char(lexer);
-    return make_Token(lexer, PLUS, NULL);
-}
-
-static Token handle_minus(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'=': return make_Token(lexer, ISUB, NULL);
-        case L'>': return make_Token(lexer, ARROW, NULL);
-    }
-
-    prev_char(lexer);
-    return make_Token(lexer, MINUS, NULL);
-}
-
-static Token handle_slash(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'/':
-            if (next_char(lexer)==L'=')
-                return make_Token(lexer, IDIV, NULL);
-
-            prev_char(lexer);
-            return make_Token(lexer, DIV, NULL);
-        case L'=':
-            return make_Token(lexer, ITRUEDIV, NULL);
-    }
-
-    prev_char(lexer);
-    return make_Token(lexer, TRUEDIV, NULL);
-}
-
-static Token handle_whitespace(Lexer *lexer);
-
-static Token handle_backslash(Lexer *lexer) { //TODO
+static Token handle_backslash(Lexer *lexer) {
     wchar_t c=next_char(lexer);
-    if (c==L'\\') {
-        for (; c!='\n'; c=next_char(lexer)) {
-            if (c==L'\0')
-                return make_Token(lexer, TT_EOF, NULL);
-        }
-        return make_Token(lexer, NEWLINE, NULL);
-    }
+    if (c==L'\\')
+        return skip_comment(lexer);
 
-    prev_char(lexer);
-    Token token; token.type=TT_EOF;
-    for (; token.type!=NEWLINE; token=handle_whitespace(lexer)) {
-        c=next_char(lexer);
-        if (c==L'\0')
-            return make_Token(lexer, TT_ERROR, L"Unexpected EOF");
-        if (!valid_whitespace(c))
-            return make_Token(lexer, TT_ERROR, L"Non-whitespace character after backslash");
-    }
+    if (c==L'\n')
+        return MAKE_TOKEN(INDENT, (void *)1);
 
-    return make_Token(lexer, INDENT, (void *)1);
-}
-
-static Token handle_pipe(Lexer *lexer) {
-    switch (next_char(lexer)) {
-        case L'|': return make_Token(lexer, ABS_BRACKET, NULL);
-        case L'=': return make_Token(lexer, IOR, NULL);
-    }
-
-    prev_char(lexer);
-    return make_Token(lexer, OR, NULL);
+    return make_Token_error(lexer, L"Expected newline after "
+                            L"line continuation character, got ...");
 }
 
 static Token handle_whitespace(Lexer *lexer) {
+    ushort count=0;
     wchar_t c=curr_char(lexer);
     if (c==L'\n')
-        return make_Token(lexer, NEWLINE, NULL);
+        return MAKE_TOKEN(NEWLINE, NULL);
     
-    ushort count=0;
     for (; c==L' ' or c==L'\t'; c=next_char(lexer))
         count+=(c==L'\t')? TABSIZE: 1;
     
     prev_char(lexer);
-    return make_Token(lexer, INDENT, (void *)(count/TABSIZE));
+    return MAKE_TOKEN(INDENT, (void *)(count/TABSIZE));
 }
 
 static Token handle_number(Lexer *lexer) {
-    size_t i=0, buffsize=16;
+    ushort i=0, buffsize=16;
     wchar_t *buffer=calloc(buffsize, sizeof(wchar_t));
     buffer[0]=curr_char(lexer);
     
@@ -370,7 +345,7 @@ static Token handle_number(Lexer *lexer) {
     for (; c!=L'\0'; c=next_char(lexer)) {
         if (c==L'.') {
             if (is_float)
-                return make_Token(lexer, TT_ERROR, L"Unexpected second dot");
+                return make_Token_error(lexer, L"Unexpected second dot");
             is_float=true;
         } else if (c==imagchar) {
             is_real=false;
@@ -389,13 +364,13 @@ static Token handle_number(Lexer *lexer) {
 
     end:
     buffer[++i]=L'\0';
-    Token token = make_Token(lexer, number_types[2*is_real+is_float], buffer);
+    Token token = MAKE_TOKEN(number_types[2*is_real+is_float], buffer);
     free(buffer);
     return token;
 }
 
 static Token handle_identifier(Lexer *lexer) {
-    size_t i=0, buffsize=16;
+    ushort i=0, buffsize=16;
     wchar_t *buffer = calloc(buffsize, sizeof(wchar_t));
     buffer[0]=curr_char(lexer);
     
@@ -417,54 +392,58 @@ static Token handle_identifier(Lexer *lexer) {
     TokenType tt = (TokenType)get_word(keyword_tokens, buffer);
     if (tt!=TT_EOF) {
         free(buffer);
-        return make_Token(lexer, tt, NULL);
+        return MAKE_TOKEN(tt, NULL);
     }
 
-    Token token = make_Token(lexer, IDENTIFIER, buffer);
+    Token token = MAKE_TOKEN(IDENTIFIER, buffer);
     free(buffer);
     return token;
 }
 
+#define SEND_TOKEN(tok) { \
+    Token tok1=tok; \
+    tok1.line=line; tok1.col=col; \
+    return tok1; \
+}
 
 Token next_token(Lexer *lexer) {
     wchar_t c=next_char(lexer);
+    ushort line=lexer->line, col=lexer->col+lexer->pos;
+
     if (c==L'\0')
-        return make_Token(lexer, TT_EOF, NULL);
+        return MAKE_TOKEN(TT_EOF, NULL);
     
-    if (valid_whitespace(c))
-        return handle_whitespace(lexer);
-    if (valid_digit(c))
-        return handle_number(lexer);
-    if (valid_alpha(c))
-        return handle_identifier(lexer);
+    if (valid_whitespace(c)) SEND_TOKEN(handle_whitespace(lexer))
+    if (valid_digit(c)) SEND_TOKEN(handle_number(lexer))
+    if (valid_alpha(c)) SEND_TOKEN(handle_identifier(lexer))
 
-    // Handle single symbol tokens
-    TokenType tt = (c<SINGLE_TOKEN_SIZE)? single_tokens[c]: TT_EOF;
-    if (tt!=TT_EOF)
-        return make_Token(lexer, tt, NULL);
+    // Handle simple tokens
+    TokenType tt0, tt = (c<SINGLE_TOKEN_SIZE)? single_tokens[c]: TT_EOF;
+    if (tt!=TT_EOF) SEND_TOKEN(((Token){tt, .value=NULL}))
 
-    // Handle symbol-equals pair
-    const TokenType *pair = (c<DOUBLE_SIZE)? double_tokens[c]: NULL;
-    if (pair!=NULL && *pair!=TT_EOF) {
-        if (next_char(lexer)==L'=')
-            return make_Token(lexer, pair[1], NULL);
+    // Handle compound tokens:
+    wchar_t buffer[8]={c, L'\0'};
+    tt=(TokenType)HashMap_get(symbol_tokens, buffer);
+    if (tt!=TT_EOF) {
+        for (ushort i=1; i<7 && tt!=TT_EOF; i++) {
+            tt0=tt; c=next_char(lexer);
+            buffer[i]=c; buffer[i+1]=L'\0';
+            tt=(TokenType)HashMap_get(symbol_tokens, buffer);
+        }
 
         prev_char(lexer);
-        return make_Token(lexer, pair[0], NULL);
+        SEND_TOKEN(((Token){tt0, .value=NULL}))
     }
 
     // Handle special symbols
     switch (c) { //TODO: handle_dot: ..., .05
-        case L'!': return handle_excl(lexer);
-        case L'"': return handle_string(lexer);
-        case L'$': return handle_dollar(lexer);
-        case L'*': return handle_star(lexer);
-        case L'+': return handle_plus(lexer);
-        case L'-': return handle_minus(lexer);
-        case L'/': return handle_slash(lexer);
-        case L'\\': return handle_backslash(lexer);
-        case L'|': return handle_pipe(lexer);
+        case L'"': SEND_TOKEN(handle_string(lexer))
+        case L'$': SEND_TOKEN(handle_dollar(lexer))
+        case L'\\': SEND_TOKEN(handle_backslash(lexer))
     }
 
-    return make_Token(lexer, TT_ERROR, L"Unknown char"); //TODO: handle char format
+    return make_Token_error(lexer, L"Unknown char"); //TODO: handle char format
 }
+
+#undef SEND_TOKEN
+#undef MAKE_TOKEN

@@ -12,9 +12,9 @@ bool stdcomp_string(const void *, const void *);
 bool stdcomp_wstring(const void *, const void *);
 
 uint64_t stdhash_FNV1(const void *buffer, size_t size);
-uint64_t stdhash_int(const void *data);
-uint64_t stdhash_string(const void *data);
-uint64_t stdhash_wstring(const void *data);
+uint64_t stdhash_int(const void *buffer);
+uint64_t stdhash_string(const void *buffer);
+uint64_t stdhash_wstring(const void *buffer);
 
 typedef struct HashMap HashMap;
 

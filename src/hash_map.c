@@ -20,34 +20,35 @@ bool stdcomp_wstring(const void *value1, const void *value2) {
     return wcscmp(value1, value2)==0;
 }
 
+#define FNV1_PRIME 0x100000001b3
 
 uint64_t stdhash_FNV1(const void *buffer, size_t size) {
     const uint64_t *data = buffer;
     register uint64_t hash = 0xcbf29ce484222325;
     register size_t i, len = size/sizeof(uint64_t);
     for (i=0; i<len; i++) {
-        hash*=0x100000001b3;
+        hash*=FNV1_PRIME;
         hash^=data[i];
     }
     
     uint64_t num=0, tailsize=size%sizeof(uint64_t);
     if (!tailsize)
         return hash;
-    memcpy(&num, buffer+len, tailsize);
-    hash*=0x100000001b3;
+    memcpy(&num, data+len, tailsize);
+    hash*=FNV1_PRIME;
     return hash^num;
 }
 
-uint64_t stdhash_int(const void *data) {
-    return (uint64_t)data;
+uint64_t stdhash_int(const void *buffer) {
+    return (uint64_t)buffer;
 }
 
-uint64_t stdhash_string(const void *data) {
-    return stdhash_FNV1(data, strlen((char *)data));
+uint64_t stdhash_string(const void *buffer) {
+    return stdhash_FNV1(buffer, strlen((char *)buffer));
 }
 
-uint64_t stdhash_wstring(const void *data) {
-    return stdhash_FNV1(data, wcslen((wchar_t *)data));
+uint64_t stdhash_wstring(const void *buffer) {
+    return stdhash_FNV1(buffer, wcslen((wchar_t *)buffer));
 }
 
 

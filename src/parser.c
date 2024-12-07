@@ -46,11 +46,11 @@ static const OperType OperType_unary_prefix[] = {
 
 static const bool OperType_unary_prohibit[] = {
     [PLUS]=true, [MINUS]=true, [PM]=true, [MUL]=true, [TRUEDIV]=true,
-    [DIV]=true, [MOD]=true, [POW]=true, [MATMUL_AT]=true
+    [DIV]=true, [MOD]=true, [POW]=true, [MATMUL]=true
 };
 
 static const OperType OperType_muldiv[] = {
-    [MUL]=BINOP_MUL, [TRUEDIV]=BINOP_TRUEDIV, [MATMUL_AT]=BINOP_MATMUL,
+    [MUL]=BINOP_MUL, [TRUEDIV]=BINOP_TRUEDIV, [MATMUL]=BINOP_MATMUL,
     [DIV]=BINOP_DIV, [MOD]=BINOP_MOD
 };
 

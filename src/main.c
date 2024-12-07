@@ -14,8 +14,9 @@ int lex_shell(FILE *file) {
     Lexer *lexer = new_Lexer(file);
 
     Token token = next_token(lexer);
+    wprintf(L"\n\n");
     for (; token.type!=TT_EOF; token=next_token(lexer)) {
-        print_Token(token);
+        print_Token_long(token);
         free_Token(&token);
         wprintf(L", ");
     }
@@ -51,6 +52,22 @@ int exec_shell(FILE *file) {
     putwchar(L'\n');
 
     free_Parser(parser);
+    return 0;
+}
+
+int lex_file() {
+    FILE *file = fopen("docs/code_examp.ms", "r");
+    if (file==NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    lex_shell(file);
+
+    if (fclose(file)==EOF) {
+        perror("Error closing file");
+        return 1;
+    }
     return 0;
 }
 
@@ -103,5 +120,5 @@ int main(int argc, char *argv[]) {
         if (valid_alnum(c)) putwchar(c);
     }
     
-    return exec_file();
+    return lex_file();
 }
