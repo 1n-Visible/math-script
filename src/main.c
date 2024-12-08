@@ -56,7 +56,7 @@ int exec_shell(FILE *file) {
 }
 
 int lex_file() {
-    FILE *file = fopen("docs/code_examp.ms", "r");
+    FILE *file = fopen("docs/input.txt", "r"); //code_examp.ms
     if (file==NULL) {
         perror("Error opening file");
         return 1;
@@ -120,5 +120,5 @@ int main(int argc, char *argv[]) {
         if (valid_alnum(c)) putwchar(c);
     }
     
-    return lex_file();
+    return exec_shell(stdin);
 }

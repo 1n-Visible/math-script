@@ -5,32 +5,33 @@ const union _Real _Real_unit = {.integer=1};
 const union _Real _Real_Inf = {.floating=INFINITY};
 const union _Real _Real_NaN = {.floating=NAN};
 
-static union _Real normalize_Real(union _Real real,
-        enum num_type type,
-        enum num_type *ret_type) {
+union _Real normalize_Real(union _Real real, enum num_type type,
+                                             enum num_type *ret_type) {
+    int64_t m;
     switch (type) {
         case NUMT_INT:
             *ret_type=NUMT_INT;
             return real;
         case NUMT_FLOAT:
-            if (real.floating!=0.0) {
+            m=real.floating;
+            if (real.floating!=(double)m) {
                 *ret_type=NUMT_FLOAT;
                 return real;
             }
+            
             *ret_type=NUMT_INT;
-            return (union _Real){.integer=0};
+            return (union _Real){.integer=m};
     }
 
     Fraction fract=fraction(real.fraction.m, real.fraction.n);
-    int64_t m=fract.m;
+    m=fract.m;
     uint64_t n=fract.n;
-    // *(Fraction *)(&m) = fraction(...);
-    if (not n) {
+    if (n==0) {
         *ret_type=NUMT_FLOAT;
         return (union _Real){.floating=INFINITY*m};
     }
 
-    if (not m or real.fraction.n==1) {
+    if (m==0 or real.fraction.n==1) {
         *ret_type=NUMT_INT;
         return (union _Real){.integer=m};
     }
@@ -172,7 +173,9 @@ REAL_UNARY(sqr) {
         case NUMT_FRACT:
             real.fraction=Fraction_sqr(real.fraction);
     }
-    return normalize_Real(real, type, ret_type);
+    
+    *ret_type=type;
+    return real;
 }
 
 REAL_UNARY(cube) {
@@ -188,7 +191,9 @@ REAL_UNARY(cube) {
         case NUMT_FRACT:
             real.fraction=Fraction_cube(real.fraction);
     }
-    return normalize_Real(real, type, ret_type);
+    
+    *ret_type=type;
+    return real;
 }
 
 REAL_UNARY(sqrt) {
@@ -205,19 +210,22 @@ union _Real _Real_##name(union _Real r1, enum num_type t1, \
                          union _Real r2, enum num_type t2, \
                                          enum num_type *ret_type)
 
-#define HANDLE_FLOAT(value) if (t1==NUMT_FLOAT or t2==NUMT_FLOAT) \
-    return normalize_Real((union _Real){.floating=value}, NUMT_FLOAT, ret_type);
+#define HANDLE_FLOAT(value) if (t1==NUMT_FLOAT or t2==NUMT_FLOAT) { \
+    *ret_type=NUMT_FLOAT; \
+    return (union _Real){.floating=value}; \
+}
 
 #define HANDLE_INT(value) if (t1==NUMT_INT and t2==NUMT_INT) { \
     *ret_type=NUMT_INT; \
     return (union _Real){.integer=value}; \
 }
 
-#define HANDLE_FRACT(name) return normalize_Real( \
-(union _Real){.fraction = Fraction_##name( \
-    _Real_to_Fraction(r1, t1), \
-    _Real_to_Fraction(r2, t2) \
-)}, NUMT_FRACT, ret_type);
+#define HANDLE_FRACT(name) { \
+    *ret_type=NUMT_FRACT; \
+    return (union _Real){.fraction = Fraction_##name( \
+        _Real_to_Fraction(r1, t1), _Real_to_Fraction(r2, t2) \
+    )}; \
+};
 
 REAL_OPER(add) {
     HANDLE_FLOAT(_Real_to_double(r1, t1) + _Real_to_double(r2, t2));
@@ -256,11 +264,10 @@ REAL_OPER(mod) {
         HANDLE_FRACT(mod);
 
     union _Real div_int=_Real_div(r1, t1, r2, t2, ret_type);
-    if (t1==NUMT_FLOAT or t2==NUMT_FLOAT)
-    return normalize_Real((union _Real){.floating =
-        _Real_to_double(r1, t1) -
-        _Real_to_double(r2, t2)*div_int.integer
-    }, NUMT_FLOAT, ret_type);
+    *ret_type=NUMT_FLOAT;
+    return (union _Real){.floating =
+        _Real_to_double(r1, t1) - _Real_to_double(r2, t2)*div_int.integer
+    };
 }
 
 //NotImplemented

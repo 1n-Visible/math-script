@@ -348,9 +348,9 @@ ASTNode parse_line(Parser *parser) {
     size_t i=0, buffsize=16;
     ASTNode *buffer=calloc(buffsize, sizeof(ASTNode));
     ASTNode node=(ASTNode){NT_EMPTY};
-    
+
     Token token;
-    while ((token=next_token(parser->lexer)).type!=NEWLINE) {
+    while (token=next_token(parser->lexer), token.type!=NEWLINE) {
         switch (token.type) {
             case INDENT:
                 continue;

@@ -41,28 +41,40 @@ const number_t number_NaN = {
 };
 
 
-static number_t normalize_number(number_t num);
+static number_t normalize_number(number_t num) {
+    num.real=normalize_Real(num.real, num.real_t, &num.real_t);
+    num.imag=normalize_Real(num.imag, num.imag_t, &num.imag_t);
+    return num;
+}
 
 number_t number_from_int(int64_t integer, bool is_real) {
     union _Real real={.integer=integer};
+    number_t num;
     if (is_real)
-        return (number_t){
+        num = (number_t){
             .real=real, .real_t=NUMT_INT, .imag=_Real_zero, .imag_t=NUMT_INT
         };
-    return (number_t){
-        .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_INT
-    };
+    else
+        num = (number_t){
+            .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_INT
+        };
+    
+    return normalize_number(num);
 }
 
 number_t number_from_float(double floating, bool is_real) {
     union _Real real={.floating=floating};
+    number_t num;
     if (is_real)
-        return (number_t){
+        num = (number_t){
             .real=real, .real_t=NUMT_FLOAT, .imag=_Real_zero, .imag_t=NUMT_INT
         };
-    return (number_t){
-        .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_FLOAT
-    };
+    else
+        num = (number_t){
+            .real=_Real_zero, .real_t=NUMT_INT, .imag=real, .imag_t=NUMT_FLOAT
+        };
+    
+    return normalize_number(num);
 }
 
 
@@ -193,13 +205,13 @@ static double number_abs_dbl(number_t num) {
 NUMBER_UNARY(abs_sqr) {
     num.real=number_abssqr(num, &num.real_t);
     num.imag=_Real_zero; num.imag_t=NUMT_INT;
-    return num;
+    return normalize_number(num);
 }
 
 NUMBER_UNARY(abs) {
     num.real=number_optabs(num, &num.real_t);
     num.imag=_Real_zero; num.imag_t=NUMT_INT;
-    return num;
+    return normalize_number(num);
 }
 
 double number_arg_cos(number_t num) {
@@ -213,11 +225,11 @@ double number_arg_sin(number_t num) {
 NUMBER_UNARY(arg_tan);
 
 NUMBER_UNARY(sqr) {
-    return number_mul(num, num);
+    return normalize_number(number_mul(num, num));
 }
 
 NUMBER_UNARY(cube) {
-    return number_mul(number_mul(num, num), num);
+    return normalize_number(number_mul(number_mul(num, num), num));
 }
 
 NUMBER_UNARY(sqrt) {
@@ -231,14 +243,14 @@ NUMBER_UNARY(sqrt) {
             num.imag.floating=sqrt(r); num.imag_t=NUMT_FLOAT;
             num.real=_Real_zero; num.real_t=NUMT_INT;
         }
-        return num;
+        return normalize_number(num);
     }
 
     num.real.floating=sqrt((r+a)/2);
     num.imag.floating=sqrt((r-a)/2)*(_Real_sign(num.imag, num.imag_t)? -1: 1);
     num.real_t=NUMT_FLOAT;
     num.imag_t=NUMT_FLOAT;
-    return num;
+    return normalize_number(num);
 }
 
 #undef NUMBER_UNARY
@@ -257,7 +269,7 @@ NUMBER_OPER(add) {
         num1.imag, num1.imag_t,
         num2.imag, num2.imag_t, &num.imag_t
     );
-    return num;
+    return normalize_number(num);
 }
 
 NUMBER_OPER(sub) {
@@ -270,7 +282,7 @@ NUMBER_OPER(sub) {
         num1.imag, num1.imag_t,
         num2.imag, num2.imag_t, &num.imag_t
     );
-    return num;
+    return normalize_number(num);
 }
 
 // (a+bi)*(c+di) = (ac-bd) + (bc+ad)i
@@ -286,7 +298,7 @@ NUMBER_OPER(mul) {
     r1=_Real_mul(num1.imag, num1.imag_t, num2.real, num2.real_t, &t1);
     r2=_Real_mul(num1.real, num1.real_t, num2.imag, num2.imag_t, &t2);
     num.imag=_Real_add(r1, t1, r2, t2, &num.imag_t); // bc+ad
-    return num;
+    return normalize_number(num);
 }
 
 // (a+bi)/(c+di) = ((ac+bd) + (bc-ad)i)/(c²+d²)
@@ -305,7 +317,7 @@ NUMBER_OPER(truediv) {
     
     num.real=_Real_truediv(num.real, num.real_t, d, td, &num.real_t);
     num.imag=_Real_truediv(num.imag, num.imag_t, d, td, &num.imag_t);
-    return num;
+    return normalize_number(num);
 }
 
 NUMBER_OPER(div) {
@@ -319,26 +331,25 @@ NUMBER_OPER(mod) {
 static number_t number_optpow(number_t num, int64_t power) {
     bool sign=(power<0);
     if (sign) power=-power;
-    short pow_log=ilog2(power);
     
-    number_t ret_num=number_unit;
-    for (int64_t i=0; i<=pow_log; i++) {
-        if (power>>i & 1) ret_num=number_mul(ret_num, num);
-        num=number_sqr(num);
+    number_t ret_num = number_unit;
+    while (power) { //square-multiply algorithm
+        if (power & 1) ret_num=number_mul(ret_num, num);
+        num=number_sqr(num); power>>=1;
     }
-
-
-    return ret_num;
+    
+    if (not sign) return ret_num;
+    return number_truediv(number_unit, ret_num);
 }
 
 NUMBER_OPER(pow) {
     if (number_is_real(num2) and num2.real_t==NUMT_INT)
-        return number_optpow(num1, num2.real.integer);
-
+        return normalize_number(number_optpow(num1, num2.real.integer));
+    
     // (a+bi)^(c+di) = e^(cln(r) - dθ) (cos(dln(r) + cθ) + isin(dln(r) + cθ))
     enum num_type t;
-    double c=_Real_to_double(num2.real, num2.real_t);
-    double d=_Real_to_double(num2.imag, num2.imag_t);
+    double c = _Real_to_double(num2.real, num2.real_t);
+    double d = _Real_to_double(num2.imag, num2.imag_t);
     double ln_r = log(_Real_to_double(number_abssqr(num1, &t), t))/2;
     double theta = atan2(
         _Real_to_double(num1.imag, num1.imag_t),

@@ -120,18 +120,22 @@ uint64_t factors_to_number(uint64_t *factors, short length) {
 uint64_t gcd(uint64_t n1, uint64_t n2) {
     if (n1==n2)
         return n1;
-
+    
     uint64_t p, res=1;
     while (not (n1&1 or n2&1)) {
         n1>>=1; n2>>=1;
         res<<=1;
     }
-
-    for (p=3; n1==1 or n2==1; p+=2) {
+    
+    if (n2<n1) {
+        p=n1; n1=n2; n2=p;
+    }
+    for (p=3; p<=n1 and n1!=1 and n2!=1; p+=2) {
         while (not (n1%p or n2%p)) {
             n1/=p; n2/=p;
             res*=p;
         }
     }
+    
     return res;
 }

@@ -1,12 +1,12 @@
 #include "rt_values/fraction.h"
 
 Fraction fraction(int64_t m, int64_t n) {
-    if (not n)
+    if (n==0)
         return (Fraction){m, 0};
-    if (not m)
+    if (m==0)
         return (Fraction){0, 1};
 
-    if (n<0) {m=-m; n=-n;}
+    if (n<0) {m=-m, n=-n;}
     uint64_t d=gcd((uint64_t)labs(m), (uint64_t)n);
     return (Fraction){m/(int64_t)d, (uint64_t)n/d};
 }

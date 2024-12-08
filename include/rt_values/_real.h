@@ -21,8 +21,10 @@ union _Real {
 extern const union _Real _Real_zero, _Real_unit;
 extern const union _Real _Real_Inf, _Real_NaN;
 
-bool _Real_sign(union _Real, enum num_type);
+union _Real normalize_Real(union _Real real, enum num_type type,
+                                             enum num_type *ret_type);
 
+bool _Real_sign(union _Real, enum num_type);
 bool _Real_to_bool(union _Real, enum num_type);
 int64_t _Real_to_int(union _Real, enum num_type);
 double _Real_to_double(union _Real, enum num_type);
