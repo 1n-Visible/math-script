@@ -10,7 +10,7 @@ WARNINGS=-Wall -Wpedantic -Wno-error \
 -Woverflow -Wpacked -Wreturn-local-addr -Wsuggest-attribute=const \
 -Wno-switch -Wno-unused-variable -Wno-discarded-qualifiers
 DEBUG=
-OPTIONS=-fshort-enums -finline-small-functions #-fmax-include-depth=10 #-O2
+OPTIONS=-fshort-enums -finline-small-functions -fmax-include-depth=10 #-O2
 LINKS=-Iinclude -lm #link math.h
 CFLAGS=$(DEBUG) $(WARNINGS) $(OPTIONS) $(LINKS)
 
@@ -38,4 +38,4 @@ build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -r bin/* build/*
+	rm -rf bin/* build/*
