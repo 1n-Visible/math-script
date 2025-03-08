@@ -1,19 +1,22 @@
+#ifndef INTERPRETER_H
+#define INTERPRETER_H
+
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "parser.h"
 #include "ast_nodes.h"
 #include "rt_value.h"
 #include "scope.h"
 
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
-
 extern DictTree *datatypes;
 
-RTExpr *alloc_RTExpr(enum rt_expr_t type);
-void collect_RTExpr(RTExpr *);
-size_t garbage_collect(ushort level);
+typedef struct Interpreter Interpreter;
 
-RTExpr *eval_ASTNode(ASTNode node); // frees ASTNode
+Interpreter *new_Interpreter(FILE *file, char *filename);
+void free_Interpreter(Interpreter *);
+void eval_expr(Interpreter *);
+
+RTExpr *eval_ASTNode(ValueReg *, ASTNode); // frees ASTNode
 
 #endif

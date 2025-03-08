@@ -1,3 +1,6 @@
+#ifndef PARSER_H
+#define PARSER_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -7,10 +10,7 @@
 
 #include "lexer.h"
 #include "ast_nodes.h"
-#include "dict_tree.h"
-
-#ifndef PARSER_H
-#define PARSER_H
+#include "utils/dict_tree.h"
 
 #define TOKEN_BUFFSIZE 16
 #define MAX_CHAINLEN 256

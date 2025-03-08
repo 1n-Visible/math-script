@@ -5,10 +5,9 @@
 #include <locale.h>
 
 #include "lexer.h"
-#include "parser.h"
 #include "interpreter.h"
 #include "rt_value.h"
-#include "charset.h"
+#include "utils/charset.h"
 
 int lex_shell(FILE *file) {
     Lexer *lexer = new_Lexer(file);
@@ -28,30 +27,13 @@ int lex_shell(FILE *file) {
 }
 
 int exec_shell(FILE *file) {
-    Parser *parser=new_Parser(file);
-    ASTNode node;
-    RTExpr *rt_expr;
-
+    Interpreter *inter=new_Interpreter(file, NULL);
     while (true) {
-        wprintf(L"\n\nms> ");
-        node=parse_line(parser);
-        if (node.type==NT_EOF)
-            break;
-
-        print_ASTNode(node);
-        rt_expr=eval_ASTNode(node);
-        putwchar(L'\n');
-        print_RTExpr(rt_expr);
-        if (rt_expr==NULL)
-            continue;
-
-        rt_expr=eval_RTExpr(NULL, rt_expr);
-        wprintf(L"\n! ");
-        print_RTExpr(rt_expr);
+        eval_expr(inter);
     }
     putwchar(L'\n');
 
-    free_Parser(parser);
+    free_Interpreter(inter);
     return 0;
 }
 
@@ -112,13 +94,13 @@ int main(int argc, char *argv[]) {
         print_size_info();
 
     wprintf(
-        L"\n\t\t\t\t= MathScript Interpreter =\n"
-        L"\nAllowed symbols:\n"
-        L" !\"#$%&'()*+,-./:;<=>?@[\\]^{|}~±²³Ø∂∈∉√∞∫≈≠≤≥⊂⊃\n"
+        L"\n\t\t\t= MathScript Interpreter =\n\nAllowed symbols:\n%ls\n",
+        valid_symbols
     );
     for (wchar_t c=L' '; c<1000; c++) {
         if (valid_alnum(c)) putwchar(c);
     }
-    
-    return exec_shell(stdin);
+    wprintf(L"\n\n");
+
+    return 0; //exec_shell(stdin);
 }

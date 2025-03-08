@@ -1,53 +1,43 @@
-#include "charset.h"
+#include "utils/charset.h"
 
-/*
-alphanum[] = (L"_"
-    L"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    L"abcdefghijklmnopqrstuvwxyz"
-    L"ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ"
-    L"αβγδεζηθικλμνξοπρστυφχψωςϕ"
-);
-symbols[] = L" !\"#$%&'()*+,-./:;<=>?@[\\]^{|}~±²³Ø∂∈∉√∞∫≈≠≤≥⊂⊃";
-whitespace[] = L" \n\t";
-single_chars[] = L"#$(),.:;?[]{}±²³Ø∂∈∉√∞∫≈≠≤≥⊂⊃",
-*/
+const wchar_t *valid_symbols = L" !\"#$%&'()*+,-./:;<=>?@[\\]^{|}~±²³Ø∂∈∉√∞∫≈≠≤≥⊂⊃";
 
-extern bool valid_whitespace(wchar_t c) {
-    return (c==L' ') or (c==L'\t') or (c==L'\n');
+bool valid_whitespace(wchar_t c) {
+    return (c==L' ') || (c==L'\t') || (c==L'\n');
 }
 
-extern bool valid_alpha(wchar_t c) {
+bool valid_alpha(wchar_t c) {
     return (
-        (L'A'<=c and c<=L'Z') or (L'a'<=c and c<=L'z') or
-        (L'Α'<=c and c<=L'ω' and (c<=L'Ω' or L'α'<=c) and c!=L'\x3a2') or
-        (c==L'ϕ') or (c==L'_')
+        (L'A'<=c && c<=L'Z') || (L'a'<=c && c<=L'z') ||
+        (L'Α'<=c && c<=L'Ω' && c!=L'\x3a2') || (L'α'<=c && c<=L'ω') ||
+        (c==L'ϕ') || (c==L'_')
     );
 }
 
-extern bool valid_digit(wchar_t c) {
-    return L'0'<=c and c<=L'9';
+bool valid_alnum(wchar_t c) {
+    return valid_alpha(c) || iswdigit(c);
 }
 
-extern bool valid_hexdigit(wchar_t c) {
-    return (L'0'<=c and c<=L'9') or (L'a'<=c and c<=L'f');
-}
-
-extern bool valid_alnum(wchar_t c) {
-    return valid_alpha(c) or valid_digit(c);
-}
-
-extern bool valid_varname(wchar_t *name) {
-    wchar_t c=*name;
+bool valid_varname(wchar_t *varname) {
+    wchar_t c=varname[0];
     if (!valid_alpha(c))
         return false;
 
-    size_t i;
-    for (i=1; (c=name[i])!=L'\0'; i++) {
-        if (!valid_alnum(c))
-            return false;
+    for (size_t i=1; (c=varname[i])!=L'\0'; i++) {
+        if (!valid_alnum(c)) return false;
     }
 
     return true;
+}
+
+
+short hexdigit_to_num(wchar_t c) {
+    if (!iswxdigit(c))
+        return -1;
+
+    if (c<=L'9')
+        return c-L'0';
+    return towupper(c)-L'A';
 }
 
 short alnum_to_index(wchar_t c) { //TODO: case L'A' ... L'Z':
@@ -90,23 +80,29 @@ wchar_t index_to_alnum(short index) {
     return L'\0';
 }
 
-wchar_t *string_copy(const wchar_t *string) {
-    if (string==NULL)
-        return NULL;
-    
-    wchar_t *new_string=calloc(wcslen(string)+1, sizeof(wchar_t));
-    wcscpy(new_string, string);
-    return new_string;
-}
 
-wchar_t *string_copy_len(const wchar_t *string, size_t *length) {
-    if (string==NULL) {
-        *length=0;
+wchar_t *wcsdup_len(const wchar_t *wstring, size_t *len_ptr) {
+    if (wstring==NULL) {
+        *len_ptr=0;
         return NULL;
     }
     
-    *length=wcslen(string);
-    wchar_t *new_string=calloc(*length+1, sizeof(wchar_t));
-    wcscpy(new_string, string);
-    return new_string;
+    size_t length = wcslen(wstring);
+    *len_ptr=length;
+    length++;
+    wchar_t *new_wstring=malloc(length*sizeof(wchar_t));
+    wcscpy(new_wstring, wstring);
+    return new_wstring;
+}
+
+wchar_t *str_to_wcs(const char *string, size_t length) {
+    if (string==NULL)
+        return NULL;
+
+    if (length==0)
+        length=strlen(string);
+
+    wchar_t *wstring = malloc(length*sizeof(wchar_t));
+    mbstowcs(wstring, string, length);
+    return wstring;
 }

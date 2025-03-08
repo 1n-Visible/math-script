@@ -1,11 +1,11 @@
+#ifndef HASH_MAP_H
+#define HASH_MAP_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <wchar.h>
-
-#ifndef HASH_MAP_H
-#define HASH_MAP_H
 
 bool stdcomp_int(const void *, const void *);
 bool stdcomp_string(const void *, const void *);

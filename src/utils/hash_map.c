@@ -1,4 +1,4 @@
-#include "hash_map.h"
+#include "utils/hash_map.h"
 
 bool stdcomp_int(const void *value1, const void *value2) {
     return (uint64_t)value1 == (uint64_t)value2;

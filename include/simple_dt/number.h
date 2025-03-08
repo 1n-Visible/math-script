@@ -1,13 +1,13 @@
+#ifndef NUMBER_H
+#define NUMBER_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <wchar.h>
 #include <iso646.h>
 
-#include "../intmath.h"
+#include "utils/intmath.h"
 #include "_real.h"
-
-#ifndef NUMBER_H
-#define NUMBER_H
 
 typedef struct number {
     union _Real real, imag;

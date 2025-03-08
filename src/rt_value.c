@@ -13,11 +13,11 @@ void free_RTValue(RTValue *rt_value) {
     switch (rt_value->type) {
         case RT_ERROR:
             free(rt_value->errormsg); break;
-        case RT_VECTOR:
-            free_vector(&rt_value->vector); break;
-        case RT_ARRAY:
         case RT_STRING:
-        	break;
+        case RT_RANGE:
+        case RT_SET:
+        case RT_METASET:
+            break;
     }
 
     free(rt_value);
@@ -31,14 +31,18 @@ RTValue *copy_RTValue(RTValue *rt_value) {
     RTValue *rt_value_copy = new_RTValue(type);
     switch (type) {
         case RT_ERROR:
-            rt_value_copy->errormsg=string_copy(rt_value->errormsg);
+            rt_value_copy->errormsg=wcsdup(rt_value->errormsg);
             break;
-        case RT_VECTOR:
-            rt_value_copy->vector=copy_vector(rt_value->vector);
+        case RT_NULL: break;
+        case RT_BOOL: break;
+        case RT_NUMBER:
+            rt_value_copy->number=rt_value->number;
             break;
-        case RT_ARRAY:
-        case RT_STRING:
-        	break;
+        case RT_CHAR: break;
+        case RT_STRING: break;
+        case RT_RANGE: break;
+        case RT_SET: break;
+        case RT_METASET: break;
     }
 
     return rt_value_copy;
@@ -50,16 +54,18 @@ void print_RTValue(RTValue *rt_value) {
         case RT_ERROR:
             wprintf(L"Runtime Error: %ls\n", rt_value->errormsg);
             break;
+        case RT_NULL: break;
+        case RT_BOOL: break;
         case RT_NUMBER:
             string=number_to_str(rt_value->number, NUMEXPR_NONE, false);
             wprintf(string);
             free(string);
             break;
-        case RT_VECTOR:
-            string=vector_to_str(rt_value->vector);
-            wprintf(string);
-            free(string);
-            break;
+        case RT_CHAR: break;
+        case RT_STRING: break;
+        case RT_RANGE: break;
+        case RT_SET: break;
+        case RT_METASET: break;
     }
 }
 
@@ -219,56 +225,4 @@ void print_RTExpr(RTExpr *rt_expr) {
         case RT_CALL: //TODO
             return;
     }
-}
-
-RTExpr *eval_RTExpr(Scope *scope, RTExpr *rt_expr) {
-    RTExpr *return_rt_expr, *rt_expr_left, *rt_expr_right;
-    RTValue *rt_value;
-
-    switch (rt_expr->type) {
-        case RT_VALUE:
-            return rt_expr;
-
-        case RT_VAR:
-            return_rt_expr=Scope_get_var(scope, rt_expr->varname);
-            if (return_rt_expr==NULL)
-                return rt_expr;
-
-            return eval_RTExpr(scope, return_rt_expr);
-
-        case RT_UNARY:
-            return_rt_expr=eval_RTExpr(scope, rt_expr->value);
-            if (return_rt_expr->type!=RT_VALUE)
-                return rt_expr;
-
-            rt_value=RTValue_unary(rt_expr->oper, return_rt_expr->rt_value);
-            return_rt_expr=alloc_RTExpr(RT_VALUE);
-            return_rt_expr->rt_value=rt_value;
-            return return_rt_expr;
-
-        case RT_BINOP:
-            rt_expr_left=eval_RTExpr(scope, rt_expr->left);
-            if (rt_expr_left->type!=RT_VALUE)
-                return rt_expr;
-
-            rt_expr_right=eval_RTExpr(scope, rt_expr->right);
-            if (rt_expr_right->type!=RT_VALUE)
-                return rt_expr;
-
-            rt_value=RTValue_binop(rt_expr->oper, rt_expr_left->rt_value,
-                                                  rt_expr_right->rt_value);
-            return_rt_expr=alloc_RTExpr(RT_VALUE);
-            return_rt_expr->rt_value=rt_value;
-            return return_rt_expr;
-
-        case RT_CALL: //TODO
-        case RT_SUM:
-        case RT_PROD:
-            return_rt_expr=eval_RTExpr(scope, rt_expr->value);
-
-        case RT_INT:
-            return NULL;
-    }
-
-    return NULL;
 }

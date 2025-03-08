@@ -1,3 +1,6 @@
+#ifndef _REAL_H
+#define _REAL_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -6,9 +9,6 @@
 #include <iso646.h>
 
 #include "fraction.h"
-
-#ifndef _REAL_H
-#define _REAL_H
 
 enum num_type {NUMT_INT, NUMT_FRACT, NUMT_FLOAT};
 

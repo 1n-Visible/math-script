@@ -1,43 +1,41 @@
-#include <stdlib.h>
-
-#include "ast_nodes.h"
-#include "scope.h"
-#include "rt_values/number.h"
-#include "rt_values/vector.h"/*
-#include "rt_values/array.h"
-#include "rt_values/string.h"
-#include "rt_values/.h"*/
-
 #ifndef RT_VALUES_H
 #define RT_VALUES_H
 
+#include <stdlib.h>
+
+#include "ast_nodes.h"
+#include "simple_dt/number.h"
+//#include "simple_dt/string.h"
+#include "complex_dt/vector.h"
+//#include "complex_dt/.h"
+
 /*
-value = (number | vector | char | string | list | set | dict)
-object = value | array(of values) | function
+object = (error | null_type | boolean | number | char | string)
+expr = value | (vector | array | list | set | dict | function | exec_func)
 */
 
 enum rt_value_t {
-    RT_ERROR=-1,
-    RT_NUMBER, RT_VECTOR, RT_ARRAY,
-    RT_CHAR, RT_STRING,
-    RT_SET, RT_METASET, RT_LIST,
-    RT_FUNCTION, RT_USERTYPE
+    RT_ERROR=-1, RT_NULL, RT_BOOL, RT_NUMBER,
+    RT_CHAR, RT_STRING, RT_RANGE, RT_SET, RT_METASET
 };
 
 enum rt_expr_t {
-    RT_VALUE, RT_VAR, RT_UNARY, RT_BINOP, RT_CALL,
-    RT_SUM, RT_PROD, RT_INT
+    RT_VALUE, RT_VAR, RT_CALL,
+    RT_UNARY, RT_BINOP, RT_SUM, RT_PROD, RT_INT,
+    RT_VECTOR, RT_ARRAY, RT_LIST, RT_DICT,
+    RT_FUNCTION, RT_EXEC_FUNC, RT_USERTYPE
 };
 
 typedef struct RTValue RTValue;
 typedef struct RTExpr RTExpr;
 
+// Immutable atomic objects:
 struct RTValue { //TODO: separate error into own struct with line & col
     enum rt_value_t type;
     union {
         wchar_t *errormsg;
-        number_t number; vector_t vector; /*array_t array;
-        wchar_t character; string_t string;*/
+        number_t number;
+        //wchar_t character; string_t string;
     };
 };
 
@@ -49,9 +47,10 @@ struct RTExpr {
     union {
         RTValue *rt_value;
         wchar_t *varname;
-        RTExpr *value, *left;
+        RTExpr *value;
+        vector_t vector; // array_t array; ...
     };
-    RTExpr *right;
+    RTExpr *left, *right;
 };
 
 RTValue *new_RTValue(enum rt_value_t type);
@@ -59,6 +58,7 @@ void free_RTValue(RTValue *);
 RTValue *copy_RTValue(RTValue *);
 void print_RTValue(RTValue *);
 
+RTValue *RTValue_unary(OperType, RTValue *);
 RTValue *RTValue_binop(OperType, RTValue *, RTValue *);
 
 #define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *value)
@@ -78,10 +78,9 @@ RT_VALUE_OPER(mod)
 RT_VALUE_OPER(pow)
 #undef RT_VALUE_OPER
 
-
-extern RTExpr *alloc_RTExpr(enum rt_expr_t type);
+typedef struct ValueRegister ValueReg;
+extern RTExpr *alloc_RTExpr(ValueReg *vr, enum rt_expr_t type);
 void free_RTExpr(RTExpr *);
 void print_RTExpr(RTExpr *);
-RTExpr *eval_RTExpr(Scope *, RTExpr *);
 
 #endif

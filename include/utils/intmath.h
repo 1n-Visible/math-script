@@ -1,11 +1,11 @@
+#ifndef INTMATH_H
+#define INTMATH_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <iso646.h>
 #include <math.h>
-
-#ifndef INTMATH_H
-#define INTMATH_H
 
 int64_t imin(int64_t, int64_t);
 int64_t imax(int64_t, int64_t);

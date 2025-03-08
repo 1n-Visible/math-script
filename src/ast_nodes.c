@@ -324,14 +324,14 @@ void print_ASTNode(ASTNode node) {
 
 ASTNode ASTNode_error(ASTNode node, wchar_t *error_code) {
     return (ASTNode){
-        NT_ERROR, .error_code=string_copy(error_code),
+        NT_ERROR, .error_code=wcsdup(error_code),
         .line=node.line, .col=node.col
     };
 }
 
 ASTNode ASTNode_error_from_Token(Token token, wchar_t *error_code) {
     return (ASTNode){
-        NT_ERROR, .error_code=string_copy(error_code),
+        NT_ERROR, .error_code=wcsdup(error_code),
         .line=token.line, .col=token.col
     };
 }

@@ -1,15 +1,16 @@
+#ifndef LEXER_H
+#define LEXER_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <iso646.h>
 
-#include "hash_map.h"
-#include "dict_tree.h"
-#include "charset.h"
-
-#ifndef LEXER_H
-#define LEXER_H
+#include "utils/hash_map.h"
+#include "utils/dict_tree.h"
+#include "utils/charset.h"
 
 #define TABSIZE 4
 #define LEXER_BUFFSIZE 8

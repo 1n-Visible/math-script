@@ -1,4 +1,4 @@
-#include "dict_tree.h"
+#include "utils/dict_tree.h"
 
 struct DictTree {
     DictTree *nodes[CHARSET_SIZE];

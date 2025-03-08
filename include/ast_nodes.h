@@ -1,12 +1,12 @@
+#ifndef AST_NODES_H
+#define AST_NODES_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <wchar.h>
 #include <math.h>
 
 #include "lexer.h"
-
-#ifndef AST_NODES_H
-#define AST_NODES_H
 
 /* === ATOM === */
 enum AtomType {

@@ -1,12 +1,12 @@
+#ifndef FRACTION_H
+#define FRACTION_H
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 
-#include "../intmath.h"
-
-#ifndef FRACTION_H
-#define FRACTION_H
+#include "utils/intmath.h"
 
 typedef struct {
     int64_t m;

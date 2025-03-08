@@ -1,4 +1,4 @@
-#include "intmath.h"
+#include "utils/intmath.h"
 
 int64_t imin(int64_t value1, int64_t value2) {
     return (value1>value2)? value2: value1;

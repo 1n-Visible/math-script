@@ -1,11 +1,11 @@
+#ifndef DICT_TREE_H
+#define DICT_TREE_H
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <wchar.h>
 
-#include "charset.h"
-
-#ifndef DICT_TREE_H
-#define DICT_TREE_H
+#include "./charset.h"
 
 typedef struct DictTree DictTree;
 

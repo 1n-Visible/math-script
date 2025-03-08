@@ -227,7 +227,7 @@ Token make_Token(TokenType type, const wchar_t *value) {
     if (type==INDENT)
         value_size=(size_t)value;
     else if (value!=NULL)
-        token.value=string_copy_len(value, &value_size);
+        token.value=wcsdup_len(value, &value_size);
 
     token.value_size=value_size;
     return token;
@@ -237,7 +237,7 @@ Token make_Token_error(Lexer *lexer, const wchar_t *value) {
     Token token = (Token){TT_ERROR, .value=NULL};
     size_t value_size = 0;
     if (value!=NULL)
-        token.value=string_copy_len(value, &value_size);
+        token.value=wcsdup_len(value, &value_size);
 
     token.value_size=value_size;
     token.line=lexer->line;
@@ -350,7 +350,7 @@ static Token handle_number(Lexer *lexer) {
         } else if (c==imagchar) {
             is_real=false;
             goto end;
-        } else if (!valid_digit(c)) {
+        } else if (!iswdigit(c)) {
             prev_char(lexer);
             goto end;
         }
@@ -414,7 +414,7 @@ Token next_token(Lexer *lexer) {
         return MAKE_TOKEN(TT_EOF, NULL);
     
     if (valid_whitespace(c)) SEND_TOKEN(handle_whitespace(lexer))
-    if (valid_digit(c)) SEND_TOKEN(handle_number(lexer))
+    if (iswdigit(c)) SEND_TOKEN(handle_number(lexer))
     if (valid_alpha(c)) SEND_TOKEN(handle_identifier(lexer))
 
     // Handle simple tokens
