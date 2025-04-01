@@ -29,7 +29,6 @@ typedef struct { // TODO: AT_IDENTIFIER, copy lengths
 
 void free_Atom(Atom *atom);
 void print_Atom(Atom atom);
-Atom Atom_from_Token(Token token);
 
 extern const ushort RANGE_START, RANGE_STOP;
 
@@ -45,7 +44,7 @@ typedef enum OperType {
     COMP_IS, COMP_IN, COMP_NOT_IN, COMP_SUBSET, COMP_SUPERSET
 } OperType;
 
-extern const char *operators_string[];
+extern const wchar_t *operators_string[];
 extern const char *OperType_string[];
 
 typedef struct Expression Expression;

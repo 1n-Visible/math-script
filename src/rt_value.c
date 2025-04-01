@@ -188,6 +188,18 @@ void free_RTExpr(RTExpr *rt_expr) {
             free_RTValue(rt_expr->rt_value); break;
         case RT_VAR:
             free(rt_expr->varname); break;
+        case RT_CALL: break;
+        case RT_SUM: break;
+        case RT_PROD: break;
+        case RT_INT: break;
+        case RT_VECTOR:
+            free_vector(&rt_expr->vector); break;
+        case RT_ARRAY: break;
+        case RT_LIST: break;
+        case RT_DICT: break;
+        case RT_FUNCTION: break;
+        case RT_EXEC_FUNC: break;
+        case RT_USERTYPE: break;
     }
 
     free(rt_expr);
@@ -198,7 +210,7 @@ void print_RTExpr(RTExpr *rt_expr) {
         return;
 
     OperType oper = rt_expr->oper;
-    const char *operstr = (oper<COMP_SUPERSET)? operators_string[oper]: NULL;
+    const wchar_t *operstr = (oper<=COMP_SUPERSET)? operators_string[oper]: NULL;
     bool is_postfix = (oper<=UNARY_FACTORIAL);
 
     switch (rt_expr->type) {
@@ -208,17 +220,17 @@ void print_RTExpr(RTExpr *rt_expr) {
             wprintf(rt_expr->varname); break;
         case RT_UNARY:
             if (is_postfix) wprintf(L"(");
-            else wprintf(L"%s(", operstr);
+            else wprintf(L"%ls(", operstr);
 
             print_RTExpr(rt_expr->value);
 
-            if (is_postfix) wprintf(L")%s", operstr);
+            if (is_postfix) wprintf(L")%ls", operstr);
             else wprintf(L")");
             break;
         case RT_BINOP:
             putwchar(L'(');
             print_RTExpr(rt_expr->left);
-            wprintf(L" %s ", operstr);
+            wprintf(L" %ls ", operstr);
             print_RTExpr(rt_expr->right);
             putwchar(L')');
             break;

@@ -1,5 +1,5 @@
-#ifndef RT_VALUES_H
-#define RT_VALUES_H
+#ifndef RT_VALUE_H
+#define RT_VALUE_H
 
 #include <stdlib.h>
 
@@ -48,9 +48,11 @@ struct RTExpr {
         RTValue *rt_value;
         wchar_t *varname;
         RTExpr *value;
+        struct {
+            RTExpr *left, *right;
+        };
         vector_t vector; // array_t array; ...
     };
-    RTExpr *left, *right;
 };
 
 RTValue *new_RTValue(enum rt_value_t type);
@@ -61,7 +63,7 @@ void print_RTValue(RTValue *);
 RTValue *RTValue_unary(OperType, RTValue *);
 RTValue *RTValue_binop(OperType, RTValue *, RTValue *);
 
-#define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *value)
+#define RT_VALUE_UNARY(name) RTValue *RTValue_##name(RTValue *)
 
 #undef RT_VALUE_UNARY
 
@@ -78,8 +80,6 @@ RT_VALUE_OPER(mod)
 RT_VALUE_OPER(pow)
 #undef RT_VALUE_OPER
 
-typedef struct ValueRegister ValueReg;
-extern RTExpr *alloc_RTExpr(ValueReg *vr, enum rt_expr_t type);
 void free_RTExpr(RTExpr *);
 void print_RTExpr(RTExpr *);
 

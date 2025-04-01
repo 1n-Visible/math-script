@@ -8,6 +8,16 @@
 #include "utils/dict_tree.h"
 #include "rt_value.h"
 
+typedef struct RTAllocator RTAlloc;
+
+RTAlloc *new_RTAlloc(size_t size);
+void free_RTAlloc(RTAlloc *);
+
+RTExpr *alloc_RTExpr(RTAlloc *, enum rt_expr_t type);
+void collect_RTExpr(RTAlloc *, RTExpr *);
+
+void print_RTAlloc(RTAlloc *);
+
 typedef struct Scope Scope;
 
 struct Scope {
@@ -17,12 +27,7 @@ struct Scope {
 };
 
 Scope *new_Scope(Scope *parent, wchar_t *name);
-void free_Scope(Scope *scope);
-RTExpr *Scope_get_var(Scope *scope, const wchar_t *varname);
-
-typedef struct ValueRegister ValueReg;
-
-ValueReg *new_ValueReg(size_t size);
-void free_ValueReg(ValueReg *vr);
+void free_Scope(Scope *);
+RTExpr *Scope_get_var(Scope *, const wchar_t *varname);
 
 #endif

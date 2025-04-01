@@ -15,8 +15,8 @@ typedef struct Interpreter Interpreter;
 
 Interpreter *new_Interpreter(FILE *file, char *filename);
 void free_Interpreter(Interpreter *);
-void eval_expr(Interpreter *);
+bool eval_expr(Interpreter *);
 
-RTExpr *eval_ASTNode(ValueReg *, ASTNode); // frees ASTNode
+RTExpr *eval_ASTNode(RTAlloc *, ASTNode); // frees ASTNode
 
 #endif

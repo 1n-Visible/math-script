@@ -32,11 +32,14 @@ void print_Atom(Atom atom) {
     }
 }
 
-Atom Atom_from_Token(Token token) { // frees Token
+static Atom Atom_from_Token(Token token) { // frees Token
     wchar_t c, *end_string;
     int64_t integer;
     double floating;
+
     switch (token.type) {
+        case IDENTIFIER:
+            return (Atom){AT_IDENTIFIER, .identifier=token.value};
         case KW_NONE:
             return (Atom){AT_NONE};
         case KW_TRUE:
@@ -79,13 +82,14 @@ Atom Atom_from_Token(Token token) { // frees Token
 
 const ushort RANGE_START=1, RANGE_STOP=2;
 
-const char *operators_string[] = {
-    NULL, "#", "abs", "²", "³", "!", "**", "√",
-    "*", "/", "@", "//", "%",
-    "+", "-", "±", "+", "-", "±",
-    "&", "^", "|",
-    "==", "≠", "~", "!~", "≈", "!≈", "<", ">", "≤", "≥",
-    "is", "∈", "∉", "⊂", "⊃"
+const wchar_t *operators_string[] = {
+    NULL, L"#", L"abs", L"²", L"³", L"!", L"**", L"√",
+    L"*", L"/", L"@", L"//", L"%",
+    L"+", L"-", L"±", L"+", L"-", L"±",
+    L"&", L"^", L"|",
+    L"==", L"≠", L"~", L"!~", L"≈", L"!≈",
+    L"<", L">", L"≤", L"≥",
+    L"is", L"∈", L"∉", L"⊂", L"⊃"
 };
 
 const char *OperType_string[] = {
@@ -199,8 +203,8 @@ void print_expr_long(Expression *expr) {
 
 void print_expr(Expression *expr) {
     ushort param=expr->parameter;
-    const char *operstr = (
-        (expr->oper<COMP_SUPERSET)? operators_string[expr->oper]: NULL
+    const wchar_t *operstr = (
+        (expr->oper<=COMP_SUPERSET)? operators_string[expr->oper]: NULL
     );
 
     switch (expr->type) {
@@ -209,19 +213,19 @@ void print_expr(Expression *expr) {
             return;
 
         case NT_UNARY_PREFIX:
-            wprintf(L"%s(", operstr);
+            wprintf(L"%ls(", operstr);
             print_expr(expr->value);
             break;
         case NT_UNARY_POSTFIX:
             putwchar(L'(');
             print_expr(expr->value);
-            wprintf(L")%s", operstr);
+            wprintf(L")%ls", operstr);
             return;
 
         case NT_BINOP:
             putwchar(L'(');
             print_expr(expr->left);
-            wprintf(L" %s ", operstr);
+            wprintf(L" %ls ", operstr);
             print_expr(expr->right);
             break;
 
@@ -229,7 +233,7 @@ void print_expr(Expression *expr) {
             putwchar(L'(');
             for (ushort i=0; i<param; i++) {
                 print_expr(expr->values[i]);
-                wprintf(L" %s ", operators_string[expr->operators[i]]);
+                wprintf(L" %ls ", operators_string[expr->operators[i]]);
             }
             print_expr(expr->values[param]);
             break;
@@ -362,8 +366,4 @@ ASTNode ASTNode_from_Token(Token token) { // frees Token
     Expression *expr=new_Expression(NT_ATOM);
     expr->atom=atom;
     return (ASTNode){NT_EXPR, .expr=expr};
-}
-
-ASTNode ASTNode_from_expr(Expression *expr) {
-    return (ASTNode){NT_EXPR, .expr=expr}; //TODO: something with this
 }

@@ -28,8 +28,9 @@ int lex_shell(FILE *file) {
 
 int exec_shell(FILE *file) {
     Interpreter *inter=new_Interpreter(file, NULL);
-    while (true) {
-        eval_expr(inter);
+    bool running=true;
+    while (running) {
+        running=eval_expr(inter);
     }
     putwchar(L'\n');
 
@@ -94,13 +95,12 @@ int main(int argc, char *argv[]) {
         print_size_info();
 
     wprintf(
-        L"\n\t\t\t= MathScript Interpreter =\n\nAllowed symbols:\n%ls\n",
+        L"\n\t\t\t= Ματθ-Σcrιpt Interpreter =\n\nAllowed symbols:\n%ls\n",
         valid_symbols
     );
     for (wchar_t c=L' '; c<1000; c++) {
         if (valid_alnum(c)) putwchar(c);
     }
-    wprintf(L"\n\n");
 
-    return 0; //exec_shell(stdin);
+    return exec_file();
 }

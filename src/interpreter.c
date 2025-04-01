@@ -22,7 +22,7 @@ struct Interpreter {
     wchar_t *prompt;
     Parser *parser;
     Scope *glob_scope;
-    ValueReg *vr;
+    RTAlloc *alloc;
     bool own_file;
 };
 
@@ -42,14 +42,14 @@ Interpreter *new_Interpreter(FILE *file, char *filename) {
 
     inter->parser=new_Parser(file);
     inter->glob_scope=new_Scope(NULL, str_to_wcs(filename, 0));
-    inter->vr=new_ValueReg(64);
+    inter->alloc=new_RTAlloc(64);
     return inter;
 }
 
 void free_Interpreter(Interpreter *inter) {
     free_Parser(inter->parser);
     free_Scope(inter->glob_scope);
-    free_ValueReg(inter->vr);
+    free_RTAlloc(inter->alloc);
 
     if (inter->own_file)
         fclose(inter->file);
@@ -57,13 +57,13 @@ void free_Interpreter(Interpreter *inter) {
 }
 
 
-static RTExpr *eval_Atom(ValueReg *vr, Atom atom) { // frees Atom
+static RTExpr *eval_Atom(RTAlloc *alloc, Atom atom) { // frees Atom
     RTExpr *rt_expr;
     RTValue *rt_value;
 
     switch (atom.type) {
         case AT_IDENTIFIER:
-            rt_expr=alloc_RTExpr(vr, RT_VAR);
+            rt_expr=alloc_RTExpr(alloc, RT_VAR);
             rt_expr->varname=atom.identifier;
             return rt_expr;
 
@@ -85,33 +85,33 @@ static RTExpr *eval_Atom(ValueReg *vr, Atom atom) { // frees Atom
             return NULL;
     }
 
-    rt_expr=alloc_RTExpr(vr, RT_VALUE);
+    rt_expr=alloc_RTExpr(alloc, RT_VALUE);
     rt_expr->rt_value=rt_value;
     return rt_expr;
 }
 
-static RTExpr *eval_Expression(ValueReg *vr, Expression *expr) { // frees Expression
+static RTExpr *eval_Expression(RTAlloc *alloc, Expression *expr) { // frees Expression
     if (expr==NULL)
         return NULL;
 
     RTExpr *rt_expr=NULL;
     switch (expr->type) {
         case NT_ATOM:
-            rt_expr=eval_Atom(vr, expr->atom);
+            rt_expr=eval_Atom(alloc, expr->atom);
             break;
 
         case NT_UNARY_PREFIX:
         case NT_UNARY_POSTFIX:
-            rt_expr=alloc_RTExpr(vr, RT_UNARY);
+            rt_expr=alloc_RTExpr(alloc, RT_UNARY);
             rt_expr->oper=expr->oper;
-            rt_expr->value=eval_Expression(vr, expr->value);
+            rt_expr->value=eval_Expression(alloc, expr->value);
             break;
 
         case NT_BINOP:
-            rt_expr=alloc_RTExpr(vr, RT_BINOP);
+            rt_expr=alloc_RTExpr(alloc, RT_BINOP);
             rt_expr->oper=expr->oper;
-            rt_expr->left=eval_Expression(vr, expr->left);
-            rt_expr->right=eval_Expression(vr, expr->right);
+            rt_expr->left=eval_Expression(alloc, expr->left);
+            rt_expr->right=eval_Expression(alloc, expr->right);
             break;
         case NT_COMP:
             // TODO: Evaluate == != < > <=...
@@ -126,7 +126,7 @@ static RTExpr *eval_Expression(ValueReg *vr, Expression *expr) { // frees Expres
     return rt_expr;
 }
 
-RTExpr *eval_ASTNode(ValueReg *vr, ASTNode node) { // frees ASTNode
+RTExpr *eval_ASTNode(RTAlloc *alloc, ASTNode node) { // frees ASTNode
     RTExpr *rt_expr;
     RTValue *rt_value;
 
@@ -137,11 +137,11 @@ RTExpr *eval_ASTNode(ValueReg *vr, ASTNode node) { // frees ASTNode
         case NT_ERROR:
             rt_value=new_RTValue(RT_ERROR);
             rt_value->errormsg=node.error_code;
-            rt_expr=alloc_RTExpr(vr, RT_VALUE);
+            rt_expr=alloc_RTExpr(alloc, RT_VALUE);
             rt_expr->rt_value=rt_value;
             return rt_expr;
         case NT_EXPR:
-            return eval_Expression(vr, node.expr);
+            return eval_Expression(alloc, node.expr);
         case NT_COMMAND: // implement
             return NULL;
     }
@@ -149,7 +149,7 @@ RTExpr *eval_ASTNode(ValueReg *vr, ASTNode node) { // frees ASTNode
     return NULL;
 }
 
-RTExpr *eval_RTExpr(RTExpr *rt_expr, Scope *scope, ValueReg *vr) {
+RTExpr *eval_RTExpr(RTExpr *rt_expr, Scope *scope, RTAlloc *alloc) {
     RTExpr *return_rt_expr, *rt_expr_left, *rt_expr_right;
     RTValue *rt_value;
 
@@ -162,37 +162,37 @@ RTExpr *eval_RTExpr(RTExpr *rt_expr, Scope *scope, ValueReg *vr) {
             if (return_rt_expr==NULL)
                 return rt_expr;
 
-            return eval_RTExpr(return_rt_expr, scope, vr);
+            return eval_RTExpr(return_rt_expr, scope, alloc);
 
         case RT_CALL: return NULL;
         case RT_UNARY:
-            return_rt_expr=eval_RTExpr(rt_expr->value, scope, vr);
+            return_rt_expr=eval_RTExpr(rt_expr->value, scope, alloc);
             if (return_rt_expr->type!=RT_VALUE)
                 return rt_expr;
 
             rt_value=RTValue_unary(rt_expr->oper, return_rt_expr->rt_value);
-            return_rt_expr=alloc_RTExpr(vr, RT_VALUE);
+            return_rt_expr=alloc_RTExpr(alloc, RT_VALUE);
             return_rt_expr->rt_value=rt_value;
             return return_rt_expr;
 
         case RT_BINOP:
-            rt_expr_left=eval_RTExpr(rt_expr->left, scope, vr);
+            rt_expr_left=eval_RTExpr(rt_expr->left, scope, alloc);
             if (rt_expr_left->type!=RT_VALUE)
                 return rt_expr;
 
-            rt_expr_right=eval_RTExpr(rt_expr->right, scope, vr);
+            rt_expr_right=eval_RTExpr(rt_expr->right, scope, alloc);
             if (rt_expr_right->type!=RT_VALUE)
                 return rt_expr;
 
             rt_value=RTValue_binop(rt_expr->oper, rt_expr_left->rt_value,
                                                   rt_expr_right->rt_value);
-            return_rt_expr=alloc_RTExpr(vr, RT_VALUE);
+            return_rt_expr=alloc_RTExpr(alloc, RT_VALUE);
             return_rt_expr->rt_value=rt_value;
             return return_rt_expr;
 
         case RT_SUM:
         case RT_PROD:
-            return_rt_expr=eval_RTExpr(rt_expr->value, scope, vr);
+            return_rt_expr=eval_RTExpr(rt_expr->value, scope, alloc);
         case RT_INT:
             return NULL;
         case RT_VECTOR: break;
@@ -207,17 +207,36 @@ RTExpr *eval_RTExpr(RTExpr *rt_expr, Scope *scope, ValueReg *vr) {
     return NULL;
 }
 
-void eval_expr(Interpreter *inter) {
+static bool _compare_var(ASTNode node, wchar_t *var) {
+    if (node.type!=NT_EXPR || node.expr->type!=NT_ATOM)
+        return false;
+
+    Atom atom=node.expr->atom;
+    if (atom.type!=AT_IDENTIFIER)
+        return false;
+    return !wcscmp(atom.identifier, var);
+}
+
+bool eval_expr(Interpreter *inter) {
     wprintf(inter->prompt);
     ASTNode node=parse_line(inter->parser);
     if (node.type==NT_EOF)
-        return;
+        return false;
+
+    if (_compare_var(node, L"alloc")) {
+        print_RTAlloc(inter->alloc);
+        return true;
+    } else if (_compare_var(node, L"exit")) {
+        return false;
+    }
 
     print_ASTNode(node);
-    RTExpr *rt_expr=eval_ASTNode(inter->vr, node);
+    RTExpr *rt_expr=eval_ASTNode(inter->alloc, node);
     if (rt_expr==NULL)
-        return;
+        return true;
 
-    rt_expr=eval_RTExpr(rt_expr, inter->glob_scope, inter->vr);
+    rt_expr=eval_RTExpr(rt_expr, inter->glob_scope, inter->alloc);
+    putwchar(L'\n');
     print_RTExpr(rt_expr);
+    return true;
 }
