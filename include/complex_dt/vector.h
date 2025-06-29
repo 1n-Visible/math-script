@@ -30,7 +30,7 @@ vector_t vector_##name(vector_t, vector_t);
 VECTOR_OPER(add)
 VECTOR_OPER(sub)
 VECTOR_OPER(mul)
-VECTOR_OPER(truediv)
+VECTOR_OPER(div)
 #undef VECTOR_OPER*/
 
 #endif

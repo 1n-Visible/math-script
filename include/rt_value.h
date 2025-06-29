@@ -73,9 +73,9 @@ RTValue *RTValue_binop(OperType, RTValue *, RTValue *);
 RT_VALUE_OPER(add)
 RT_VALUE_OPER(sub)
 RT_VALUE_OPER(mul)
-RT_VALUE_OPER(truediv)
-RT_VALUE_OPER(matmul)
 RT_VALUE_OPER(div)
+RT_VALUE_OPER(matmul)
+RT_VALUE_OPER(remdiv)
 RT_VALUE_OPER(mod)
 RT_VALUE_OPER(pow)
 #undef RT_VALUE_OPER

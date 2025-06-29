@@ -302,7 +302,7 @@ NUMBER_OPER(mul) {
 }
 
 // (a+bi)/(c+di) = ((ac+bd) + (bc-ad)i)/(c²+d²)
-NUMBER_OPER(truediv) {
+NUMBER_OPER(div) {
     number_t num;
     enum num_type t1, t2, td;
     union _Real r1, r2, d=number_abssqr(num2, &td);
@@ -315,13 +315,13 @@ NUMBER_OPER(truediv) {
     r2=_Real_mul(num1.real, num1.real_t, num2.imag, num2.imag_t, &t2);
     num.imag=_Real_sub(r1, t1, r2, t2, &num.imag_t); // bc-ad
     
-    num.real=_Real_truediv(num.real, num.real_t, d, td, &num.real_t);
-    num.imag=_Real_truediv(num.imag, num.imag_t, d, td, &num.imag_t);
+    num.real=_Real_div(num.real, num.real_t, d, td, &num.real_t);
+    num.imag=_Real_div(num.imag, num.imag_t, d, td, &num.imag_t);
     return normalize_number(num);
 }
 
-NUMBER_OPER(div) {
-    return number_floor(number_truediv(num1, num2));
+NUMBER_OPER(remdiv) {
+    return number_floor(number_div(num1, num2));
 }
 
 NUMBER_OPER(mod) {
@@ -339,7 +339,7 @@ static number_t number_optpow(number_t num, int64_t power) {
     }
     
     if (not sign) return ret_num;
-    return number_truediv(number_unit, ret_num);
+    return number_div(number_unit, ret_num);
 }
 
 NUMBER_OPER(pow) {

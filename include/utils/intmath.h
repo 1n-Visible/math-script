@@ -10,7 +10,7 @@
 int64_t imin(int64_t, int64_t);
 int64_t imax(int64_t, int64_t);
 
-int64_t idiv(int64_t, int64_t);
+int64_t iremdiv(int64_t, int64_t);
 int64_t imod(int64_t, int64_t);
 
 uint64_t isqrt(uint64_t);

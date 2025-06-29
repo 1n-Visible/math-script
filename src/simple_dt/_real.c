@@ -245,18 +245,18 @@ REAL_OPER(mul) {
     HANDLE_FRACT(mul);
 }
 
-REAL_OPER(truediv) {
+REAL_OPER(div) {
     HANDLE_FLOAT(_Real_to_double(r1, t1) / _Real_to_double(r2, t2));
-    HANDLE_FRACT(truediv);
+    HANDLE_FRACT(div);
 }
 
-REAL_OPER(div) {
+REAL_OPER(remdiv) {
     *ret_type=NUMT_INT;
     if (t1==NUMT_FLOAT or t2==NUMT_FLOAT or (t1==NUMT_INT and t2==NUMT_INT))
         return (union _Real){
             .integer=floor(_Real_to_double(r1, t1)/_Real_to_double(r2, t2))
         };
-    HANDLE_FRACT(div);
+    HANDLE_FRACT(remdiv);
 }
 
 REAL_OPER(mod) {

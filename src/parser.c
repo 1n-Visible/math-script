@@ -32,7 +32,7 @@ SQR ^ CUBE [||ABS|| ^ FACTORIAL]
 POW
 SQRT
 PLUS ^ MINUS ^ PM
-MUL, TRUEDIV, MATMUL, DIV, MOD
+MUL, DIV, MATMUL, REMDIV, MOD
 PLUS, MINUS, PM
 AND, XOR, OR
 EQ, NE, AEQ, NAE, REQ, NRE, LT, GT, LE, GE
@@ -45,15 +45,15 @@ static const OperType OperType_unary_prefix[] = {
 };
 
 static const bool OperType_unary_prohibit[] = {
-    [PLUS]=true, [MINUS]=true, [PM]=true, [MUL]=true, [TRUEDIV]=true,
-    [DIV]=true, [MOD]=true, [POW]=true, [MATMUL]=true
+    [PLUS]=true, [MINUS]=true, [PM]=true, [MUL]=true, [DIV]=true,
+    [REMDIV]=true, [MOD]=true, [POW]=true, [MATMUL]=true
 };
 
 static const OperType OperType_pow[] = {[POW]=BINOP_POW};
 
 static const OperType OperType_muldiv[] = {
-    [MUL]=BINOP_MUL, [TRUEDIV]=BINOP_TRUEDIV, [MATMUL]=BINOP_MATMUL,
-    [DIV]=BINOP_DIV, [MOD]=BINOP_MOD
+    [MUL]=BINOP_MUL, [DIV]=BINOP_DIV, [MATMUL]=BINOP_MATMUL,
+    [REMDIV]=BINOP_REMDIV, [MOD]=BINOP_MOD
 };
 
 static const OperType OperType_addsub[] = {

@@ -119,14 +119,14 @@ RTValue *RTValue_binop(OperType oper, RTValue *value1, RTValue *value2) {
             value->number=((oper==BINOP_ADD)? number_add: number_sub)(value1->number, value2->number);
             return value;
         case BINOP_MUL:
-        case BINOP_TRUEDIV:
-            value=new_RTValue(RT_NUMBER);
-            value->number=((oper==BINOP_MUL)? number_mul: number_truediv)(value1->number, value2->number);
-            return value;
         case BINOP_DIV:
+            value=new_RTValue(RT_NUMBER);
+            value->number=((oper==BINOP_MUL)? number_mul: number_div)(value1->number, value2->number);
+            return value;
+        case BINOP_REMDIV:
         case BINOP_MOD:
             value=new_RTValue(RT_NUMBER);
-            value->number=((oper==BINOP_DIV)? number_div: number_mod)(value1->number, value2->number);
+            value->number=((oper==BINOP_REMDIV)? number_remdiv: number_mod)(value1->number, value2->number);
             return value;
     }
 
@@ -159,12 +159,12 @@ RT_VALUE_OPER(mul) {
     ERR_CHECK(mul)
 }
 
-RT_VALUE_OPER(truediv) {
-    ERR_CHECK(truediv)
-}
-
 RT_VALUE_OPER(div) {
     ERR_CHECK(div)
+}
+
+RT_VALUE_OPER(remdiv) {
+    ERR_CHECK(remdiv)
 }
 
 RT_VALUE_OPER(mod) {

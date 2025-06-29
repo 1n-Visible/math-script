@@ -35,8 +35,8 @@ double Fraction_sqrt(Fraction);
 Fraction Fraction_add(Fraction, Fraction);
 Fraction Fraction_sub(Fraction, Fraction);
 Fraction Fraction_mul(Fraction, Fraction);
-Fraction Fraction_truediv(Fraction, Fraction);
-int64_t Fraction_div(Fraction, Fraction);
+Fraction Fraction_div(Fraction, Fraction);
+int64_t Fraction_remdiv(Fraction, Fraction);
 Fraction Fraction_mod(Fraction, Fraction);
 Fraction Fraction_pow(Fraction, int8_t power);
 

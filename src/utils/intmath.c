@@ -8,7 +8,7 @@ int64_t imax(int64_t value1, int64_t value2) {
     return (value1<value2)? value2: value1;
 }
 
-int64_t idiv(int64_t m, int64_t n) {
+int64_t iremdiv(int64_t m, int64_t n) {
     return floor((double)m/n);
 }
 

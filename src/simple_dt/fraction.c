@@ -82,14 +82,14 @@ FRACT_OPER(sub, f1.m*(int64_t)f2.n - f2.m*(int64_t)f1.n, f1.n*f2.n)
 
 FRACT_OPER(mul, f1.m*f2.m, f1.n*f2.n)
 
-FRACT_OPER(truediv, f1.m*(int64_t)f2.n, f2.m*(int64_t)f1.n)
+FRACT_OPER(div, f1.m*(int64_t)f2.n, f2.m*(int64_t)f1.n)
 
-int64_t Fraction_div(Fraction f1, Fraction f2) {
-    return idiv(f1.m*(int64_t)f2.n, f2.m*(int64_t)f1.n);
+int64_t Fraction_remdiv(Fraction f1, Fraction f2) {
+    return iremdiv(f1.m*(int64_t)f2.n, f2.m*(int64_t)f1.n);
 }
 
 FRACT_OPER(mod,
-    f1.m*(int64_t)f2.n - f2.m*(int64_t)f1.n*Fraction_div(f1, f2),
+    f1.m*(int64_t)f2.n - f2.m*(int64_t)f1.n*Fraction_remdiv(f1, f2),
     f1.n*f2.n
 )
 

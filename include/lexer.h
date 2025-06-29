@@ -28,11 +28,11 @@ typedef enum {
     TT_EOF=0, TT_ERROR,             // End of file, syntax error
     EQ, NE, AEQ, NAE, REQ, NRE,     // Comparisons
     LT, GT, LE, GE,                 //
-    PLUS, MINUS, MUL, TRUEDIV,      // Operations
-    DIV, MOD, POW, MATMUL,          //
+    PLUS, MINUS, MUL, DIV,      // Operations
+    REMDIV, MOD, POW, MATMUL,          //
     OR, AND, XOR,                   // Set operations
-    IADD, ISUB, IMUL, ITRUEDIV,     // Self-eq
-    IDIV, IMOD, IPOW, IMATMUL,      //
+    IADD, ISUB, IMUL, IDIV,     // Self-eq
+    IREMDIV, IMOD, IPOW, IMATMUL,      //
     IOR, IAND, IXOR,                //
     PM, SQR, CUBE, SQRT,            // Unary operations
     PAREN_L, PAREN_R,               // Parenthesis
