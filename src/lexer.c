@@ -31,7 +31,7 @@ const char *TokenType_string[] = {
 
 //TODO: remove \$
 #define ESCAPE_CODES_SIZE 119
-static const wchar_t escape_codes[ESCAPE_CODES_SIZE] = { 
+static const wchar_t escape_codes[ESCAPE_CODES_SIZE] = {
     [L'"']=L'"', [L'\'']=L'\'', [L'$']=L'$', [L'\\']=L'\\',
     [L'a']=L'\a', [L'b']=L'\b', [L'f']=L'\f',
     [L'n']=L'\n', [L'r']=L'\r', [L's']=L' ', [L't']=L'\t', [L'v']=L'\v'
@@ -80,11 +80,11 @@ __attribute__((constructor)) void setup_token_luts() {
         Q(L"<", LT), Q(L"<=", LE), Q(L"≤", LE),
         Q(L">", GT), Q(L">=", GE), Q(L"≥", GE),
         Q(L"+", PLUS), Q(L"-", MINUS), Q(L"*", MUL), Q(L"/", TRUEDIV),
-        Q(L"//", DIV), Q(L"%", MOD), Q(L"**", POW), Q(L"@", MATMUL),
-        Q(L"!", EXCL), Q(L"||", OR), Q(L"&", AND), Q(L"^", XOR),
+        Q(L"//", DIV), Q(L"%", MOD), Q(L"^", POW), Q(L"@", MATMUL),
+        Q(L"!", EXCL), Q(L"||", OR), Q(L"&", AND), Q(L"<>", XOR),
         Q(L"+=", IADD), Q(L"-=", ISUB), Q(L"*=", IMUL), Q(L"/=", ITRUEDIV),
-        Q(L"//=", IDIV), Q(L"%=", IMOD), Q(L"**=", IPOW), Q(L"@=", IMATMUL),
-        Q(L"||=", IOR), Q(L"&=", IAND), Q(L"^=", IXOR),
+        Q(L"//=", IDIV), Q(L"%=", IMOD), Q(L"^=", IPOW), Q(L"@=", IMATMUL),
+        Q(L"||=", IOR), Q(L"&=", IAND), Q(L"<>=", IXOR),
         Q(L"+-", PM), Q(L"±", PM), Q(L"²", SQR), Q(L"³", CUBE), Q(L"√", SQRT),
         Q(L"(", PAREN_L), Q(L")", PAREN_R),
         Q(L"[", SBRACK_L), Q(L"]", SBRACK_R),
