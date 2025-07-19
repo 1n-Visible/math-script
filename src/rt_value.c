@@ -128,6 +128,10 @@ RTValue *RTValue_binop(OperType oper, RTValue *value1, RTValue *value2) {
             value=new_RTValue(RT_NUMBER);
             value->number=((oper==BINOP_REMDIV)? number_remdiv: number_mod)(value1->number, value2->number);
             return value;
+        case BINOP_POW:
+			value=new_RTValue(RT_NUMBER);
+			value->number=number_pow(value1->number, value2->number);
+        	return value;
     }
 
     return NULL;

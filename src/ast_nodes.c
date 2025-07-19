@@ -83,10 +83,10 @@ static Atom Atom_from_Token(Token token) { // frees Token
 const ushort RANGE_START=1, RANGE_STOP=2;
 
 const wchar_t *operators_string[] = {
-    NULL, L"#", L"abs", L"²", L"³", L"!", L"**", L"√",
+    NULL, L"#", L"abs", L"²", L"³", L"!", L"^", L"√",
     L"*", L"/", L"@", L"//", L"%",
     L"+", L"-", L"±", L"+", L"-", L"±",
-    L"&", L"^", L"|",
+    L"&", L"<>", L"|",
     L"==", L"≠", L"~", L"!~", L"≈", L"!≈",
     L"<", L">", L"≤", L"≥",
     L"is", L"∈", L"∉", L"⊂", L"⊃"
@@ -95,7 +95,7 @@ const wchar_t *operators_string[] = {
 const char *OperType_string[] = {
     NULL, "UNARY_LENGTH", "UNARY_ABS", "UNARY_SQR", "UNARY_CUBE", "UNARY_FACTORIAL",
     "BINOP_POW", "UNARY_SQRT",
-    "BINOP_MUL", "BINOP_TRUEDIV", "BINOP_MATMUL", "BINOP_DIV", "BINOP_MOD",
+    "BINOP_MUL", "BINOP_DIV", "BINOP_MATMUL", "BINOP_REMDIV", "BINOP_MOD",
     "UNARY_POS", "UNARY_NEG", "UNARY_PM",
     "BINOP_ADD", "BINOP_SUB", "BINOP_PM",
     "BINOP_AND", "BINOP_XOR", "BINOP_OR",

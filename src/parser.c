@@ -97,6 +97,55 @@ static size_t parse_sqrcube(const ASTNode *buffer, ASTNode *new_buffer,
     return j;
 }
 
+static size_t parse_pow(const ASTNode *buffer, ASTNode *new_buffer,
+						size_t buffsize) {
+	ASTNode node;
+	
+	int i, j;
+	for (i=buffsize-1, j=0; i>=0; i--) {
+		node = buffer[i];
+		if (node.type!=NT_EXPR)
+			goto push;
+
+		Expression *expr, *right = node.expr;
+		for (i--; i>=0; i-=2) {
+			node = buffer[i];
+			if (node.type!=NT_TOKEN || node.tt!=POW) {
+				i++; break;
+			}
+
+			if (i==0) {
+				node=ASTNode_error(node, L"unexpected ^?");
+				goto push;
+			}
+
+			node = buffer[i-1];
+			if (node.type!=NT_EXPR) {
+				node=ASTNode_error(node, L"expected expression near ^");
+				goto push;
+			}
+
+			expr=new_Expression(NT_BINOP);
+			expr->left=node.expr;
+			expr->oper=BINOP_POW;
+			expr->right=right;
+			right=expr;
+		}
+		node=(ASTNode){NT_EXPR, .expr=right};
+		
+		push:
+		new_buffer[j++]=node;
+		if (node.type==NT_ERROR) break;
+	}
+
+	for (i=0; i<j/2; i++) {
+		node=new_buffer[j-i-1];
+		new_buffer[j-i-1]=new_buffer[i];
+		new_buffer[i]=node;
+	}
+	return j;
+}
+
 static size_t parse_sqrt(const ASTNode *buffer, ASTNode *new_buffer,
                          size_t buffsize) {
     size_t i, j;
@@ -245,17 +294,8 @@ static ASTNode parse_expr(ASTNode *buffer, size_t buffsize) {
     new_buffsize=parse_sqrcube(buffer, new_buffer, buffsize);
     SWAP_BUFF()
 
-    for (i=0; i<buffsize/2; i++) {
-		node=buffer[i];
-		buffer[i]=buffer[buffsize-i-1];
-		buffer[buffsize-i-1]=node;
-    }
-    PARSE_BINOP(OperType_pow, lut_pow_len)
-    for (i=0; i<buffsize/2; i++) {
-		node=buffer[i];
-		buffer[i]=buffer[buffsize-i-1];
-		buffer[buffsize-i-1]=node;
-    }
+    new_buffsize=parse_pow(buffer, new_buffer, buffsize);
+    SWAP_BUFF()
     
     new_buffsize=parse_sqrt(buffer, new_buffer, buffsize);
     SWAP_BUFF()
