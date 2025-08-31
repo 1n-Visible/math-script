@@ -13,16 +13,16 @@
 enum num_type {NUMT_INT, NUMT_FRACT, NUMT_FLOAT};
 
 union _Real {
-    int64_t integer;
-    double floating;
-    Fraction fraction;
+	int64_t integer;
+	double floating;
+	Fraction fraction;
 };
 
 extern const union _Real _Real_zero, _Real_unit;
 extern const union _Real _Real_Inf, _Real_NaN;
 
 union _Real normalize_Real(union _Real real, enum num_type type,
-                                             enum num_type *ret_type);
+											 enum num_type *ret_type);
 
 bool _Real_sign(union _Real, enum num_type);
 bool _Real_to_bool(union _Real, enum num_type);
@@ -34,7 +34,7 @@ wchar_t *_Real_to_str(union _Real, enum num_type);
 
 #define REAL_UNARY(name) \
 union _Real _Real_##name(union _Real, enum num_type, \
-                         enum num_type *ret_type);
+						 enum num_type *ret_type);
 REAL_UNARY(to_floating)
 REAL_UNARY(floor)
 REAL_UNARY(ceil)
@@ -50,8 +50,8 @@ REAL_UNARY(sqrt)
 
 
 #define REAL_OPER(name) union _Real _Real_##name( \
-    union _Real, enum num_type, \
-    union _Real, enum num_type, enum num_type *ret_type);
+	union _Real, enum num_type, \
+	union _Real, enum num_type, enum num_type *ret_type);
 
 REAL_OPER(add)
 REAL_OPER(sub)
@@ -63,6 +63,6 @@ REAL_OPER(pow)
 #undef REAL_OPER
 
 uint8_t _Real_comp(union _Real, enum num_type,
-                   union _Real, enum num_type);
+				   union _Real, enum num_type);
 
 #endif

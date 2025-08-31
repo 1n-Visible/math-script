@@ -15,15 +15,15 @@ expr = value | (vector | array | list | set | dict | function | exec_func)
 */
 
 enum rt_value_t {
-    RT_ERROR=-1, RT_NULL, RT_BOOL, RT_NUMBER,
-    RT_CHAR, RT_STRING, RT_RANGE, RT_SET, RT_METASET
+	RT_ERROR=-1, RT_NULL, RT_BOOL, RT_NUMBER,
+	RT_CHAR, RT_STRING, RT_RANGE, RT_SET, RT_METASET
 };
 
 enum rt_expr_t {
-    RT_VALUE, RT_VAR, RT_CALL,
-    RT_UNARY, RT_BINOP, RT_SUM, RT_PROD, RT_INT,
-    RT_VECTOR, RT_ARRAY, RT_LIST, RT_DICT,
-    RT_FUNCTION, RT_EXEC_FUNC, RT_USERTYPE
+	RT_VALUE, RT_VAR, RT_CALL,
+	RT_UNARY, RT_BINOP, RT_SUM, RT_PROD, RT_INT,
+	RT_VECTOR, RT_ARRAY, RT_LIST, RT_DICT,
+	RT_FUNCTION, RT_EXEC_FUNC, RT_USERTYPE
 };
 
 typedef struct RTValue RTValue;
@@ -31,28 +31,28 @@ typedef struct RTExpr RTExpr;
 
 // Immutable atomic objects:
 struct RTValue { //TODO: separate error into own struct with line & col
-    enum rt_value_t type;
-    union {
-        wchar_t *errormsg;
-        number_t number;
-        //wchar_t character; string_t string;
-    };
+	enum rt_value_t type;
+	union {
+		wchar_t *errormsg;
+		number_t number;
+		//wchar_t character; string_t string;
+	};
 };
 
 struct RTExpr {
-    enum rt_expr_t type;
-    bool is_defined;
-    OperType oper;
+	enum rt_expr_t type;
+	bool _reachable;
+	OperType oper;
 
-    union {
-        RTValue *rt_value;
-        wchar_t *varname;
-        RTExpr *value;
-        struct {
-            RTExpr *left, *right;
-        };
-        vector_t vector; // array_t array; ...
-    };
+	union {
+		RTValue *rt_value;
+		wchar_t *varname;
+		RTExpr *value;
+		struct {
+			RTExpr *left, *right;
+		};
+		vector_t vector; // array_t array; ...
+	};
 };
 
 RTValue *new_RTValue(enum rt_value_t type);

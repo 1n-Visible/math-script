@@ -10,8 +10,8 @@
 #include "_real.h"
 
 typedef struct number {
-    union _Real real, imag;
-    enum num_type real_t, imag_t;
+	union _Real real, imag;
+	enum num_type real_t, imag_t;
 } number_t;
 
 extern const number_t number_zero, number_unit, number_imagunit;

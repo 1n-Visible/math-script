@@ -9,8 +9,8 @@
 typedef struct RTExpr RTExpr;
 
 typedef struct vector {
-    RTExpr **components;
-    ushort dim;
+	RTExpr **components;
+	ushort dim;
 } vector_t;
 
 vector_t new_vector(ushort dim);

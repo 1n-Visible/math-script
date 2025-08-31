@@ -9,8 +9,8 @@
 #include "utils/intmath.h"
 
 typedef struct {
-    int64_t m;
-    uint64_t n;
+	int64_t m;
+	uint64_t n;
 } Fraction;
 
 Fraction fraction(int64_t m, int64_t n);

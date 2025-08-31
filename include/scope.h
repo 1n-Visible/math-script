@@ -21,13 +21,16 @@ void print_RTAlloc(RTAlloc *);
 typedef struct Scope Scope;
 
 struct Scope {
-    Scope *parent;
-    wchar_t *name;
-    DictTree *vars;
+	Scope *parent;
+	wchar_t *name;
+	HashMap *vars;
+	RTAlloc *alloc;
 };
 
 Scope *new_Scope(Scope *parent, wchar_t *name);
 void free_Scope(Scope *);
 RTExpr *Scope_get_var(Scope *, const wchar_t *varname);
+
+size_t garbage_collect(Scope *, ushort level);
 
 #endif

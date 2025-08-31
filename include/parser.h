@@ -16,10 +16,10 @@
 #define MAX_CHAINLEN 256
 
 typedef struct {
-    Lexer *lexer;
-    DictTree *datatypes;
-    Token buffer[TOKEN_BUFFSIZE];
-    size_t pos, buffsize;
+	Lexer *lexer;
+	DictTree *datatypes;
+	Token buffer[TOKEN_BUFFSIZE];
+	size_t pos, buffsize;
 } Parser;
 
 Parser *new_Parser(FILE *file);
